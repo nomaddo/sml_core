@@ -1,0 +1,75 @@
+% Created 2015-08-23 日 19:05
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{fixltx2e}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{marvosym}
+\usepackage{wasysym}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\tolerance=1000
+\date{\today}
+\title{SMLコア言語入門}
+\hypersetup{
+  pdfkeywords={},
+  pdfsubject={},
+  pdfcreator={}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+
+\section{この章について}
+\label{sec-1}
+\subsection{SML/NJのインストール}
+\label{sec-1-1}
+\subsection{対話環境について}
+\label{sec-1-2}
+
+\section{基礎文法}
+\label{sec-2}
+\subsection{全ては式}
+\label{sec-2-1}
+例えばC言語では値を返さないものありますが、SMLでは全ては値を返します
+SMLに限らず関数型言語では値を組み合わせてプログラミングしていきます
+\begin{verbatim}
+- 1;
+val it = 1 : int
+- "god is god";
+val it = "god is god" : string
+\end{verbatim}
+
+if文もCの三項演算子のように値を返します。
+またif文のelse節は省略できません。
+\begin{verbatim}
+- if true then 1 else 2;
+val it = 1 : int
+- (if true then 1 else 2) + 1;
+val it = 2 : int
+\end{verbatim}
+
+
+\subsection{静的な型検査}
+\label{sec-2-2}
+SMLでは静的に（コンパイル時）に型がつきます。
+動的型付け言語などと異なり型が合わないものはエラーになります。
+
+下の例ではint型の値とreal型（CのDoubleのこと）の値を加算しようとして型エラーになりました。
+\begin{verbatim}
+- 1 + 2.0;
+stdIn:5.1-5.8 Error: operator and operand don't agree [literal]
+  operator domain: int * int
+  operand:         int * real
+  in expression:
+    1 + 2.0
+\end{verbatim}
+\end{document}
