@@ -1,4 +1,4 @@
-% Created 2015-08-23 日 19:05
+% Created 2015-08-23 日 19:10
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -28,17 +28,19 @@
 \tableofcontents
 
 
-\section{この章について}
+\section{この章の目的}
 \label{sec-1}
-\subsection{SML/NJのインストール}
-\label{sec-1-1}
-\subsection{対話環境について}
-\label{sec-1-2}
-
-\section{基礎文法}
+最低限SMLコードを理解し話題についていく基礎を与える
+\section{{\bfseries\sffamily TODO} SML/NJのインストール}
 \label{sec-2}
+
+\section{{\bfseries\sffamily TODO} 対話環境について}
+\label{sec-3}
+対話環境の見方を説明する
+\section{基礎文法}
+\label{sec-4}
 \subsection{全ては式}
-\label{sec-2-1}
+\label{sec-4-1}
 例えばC言語では値を返さないものありますが、SMLでは全ては値を返します
 SMLに限らず関数型言語では値を組み合わせてプログラミングしていきます
 \begin{verbatim}
@@ -57,9 +59,8 @@ val it = 1 : int
 val it = 2 : int
 \end{verbatim}
 
-
 \subsection{静的な型検査}
-\label{sec-2-2}
+\label{sec-4-2}
 SMLでは静的に（コンパイル時）に型がつきます。
 動的型付け言語などと異なり型が合わないものはエラーになります。
 
