@@ -1,76 +1,340 @@
-% Created 2015-08-23 日 19:10
-\documentclass[11pt]{article}
+% Created 2015-08-27 木 18:07
+\documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{fixltx2e}
 \usepackage{graphicx}
-\usepackage{longtable}
-\usepackage{float}
-\usepackage{wrapfig}
-\usepackage{rotating}
-\usepackage[normalem]{ulem}
+\usepackage{ascmac} % 枠付き環境のため
 \usepackage{amsmath}
-\usepackage{textcomp}
-\usepackage{marvosym}
-\usepackage{wasysym}
-\usepackage{amssymb}
 \usepackage{hyperref}
-\tolerance=1000
-\date{\today}
+\usepackage{color}
+\usepackage{listings,jlisting} % jlistingはtex-live-fullでも入ってない。手動
+
+\usepackage{geometry}
+\geometry{left=25mm,right=25mm,top=20mm,bottom=20mm}
+
+% \usepackage{courier}
+%\usepackage{DejaVuSansMono}
+\usepackage[T1]{fontenc}
+% \usepackage{lmodern}
+% \usepackage{luximono}
+\usepackage[scaled=0.85]{beramono}
+
+% \date{\today}
+
+\lstdefinelanguage{SML} {
+  morecomment=[n]{(*}{*)},
+  commentstyle=\textit,
+  keywords = {
+    if,then,else,val,let,in,end,fun,fn,exception,case,of,datatype,type,
+  },
+  keywordstyle=\bf,
+  ndkeywords={true,false,int,bool,string,char},
+  ndkeywordstyle=
+}
+
+\lstset{
+  language={SML},% プログラミング言語
+  basicstyle={\ttfamily\small},% ソースコードのテキストのスタイル
+  keywordstyle={\bfseries},% 予約語等のキーワードのスタイル
+  commentstyle={},% コメントのスタイル
+  stringstyle={},% 文字列のスタイル
+  frame=trlb,% ソースコードの枠線の設定 (none だと非表示)
+  numbers=none,% 行番号の表示 (left だと左に表示)
+  numberstyle={},% 行番号のスタイル
+  xleftmargin=5pt,% 左余白
+  xrightmargin=5pt,% 右余白
+  keepspaces=true,% 空白を表示する
+  mathescape,% $ で囲った部分を数式として表示する ($ がソースコード中で使えなくなるので注意)
+  % 手動強調表示の設定
+  moredelim=[is][\fontfamily{pcr}\selectfont\itshape]{@/}{/@},
+  moredelim=[is][\color{red}]{@r\{}{\}@},
+  moredelim=[is][\color{blue}]{@b\{}{\}@},
+  moredelim=[is][\color{DarkGreen}]{@g\{}{\}@},
+}
+
 \title{SMLコア言語入門}
-\hypersetup{
-  pdfkeywords={},
-  pdfsubject={},
-  pdfcreator={}}
+\author{@no\_maddo}
+
 \begin{document}
 
 \maketitle
 \tableofcontents
 
+\part{Standard MLの世界へようこそ！}
+Standard ML（以下SML）の世界へようこそ！
+最低限SMLコードを理解しこの本の話題を楽しく読めるようになることです！
+\section{SML/NJ}
+\subsection{SML/NJのインストール}
+\subsection{対話環境について}
+TODO:
+\begin{itemize}
+\item ハローワールド
+\item 対話環境の見方を説明する
+\item ファイルのロード
+\end{itemize}
 
-\section{この章の目的}
-\label{sec-1}
-最低限SMLコードを理解し話題についていく基礎を与える
-\section{{\bfseries\sffamily TODO} SML/NJのインストール}
-\label{sec-2}
+\subsection{}
 
-\section{{\bfseries\sffamily TODO} 対話環境について}
-\label{sec-3}
-対話環境の見方を説明する
-\section{基礎文法}
-\label{sec-4}
-\subsection{全ては式}
-\label{sec-4-1}
-例えばC言語では値を返さないものありますが、SMLでは全ては値を返します
-SMLに限らず関数型言語では値を組み合わせてプログラミングしていきます
-\begin{verbatim}
-- 1;
-val it = 1 : int
+\part{基礎文法}
+
+\section{全ては式}
+
+例えばC言語では値を返さないものありますが、
+SMLでは（関数宣言・型宣言などの宣言は除いて）全ての要素は値を返します。
+SMLに限らず一般に関数型言語では値を組み合わせてプログラミングしていきます。
+
+\begin{lstlisting}[caption=全ては値！,label=code:values]
+- 1
+@/val it = 1 : int/@
 - "god is god";
-val it = "god is god" : string
-\end{verbatim}
+@/val it = "god is god" : string/@
+\end{lstlisting}
 
-if文もCの三項演算子のように値を返します。
-またif文のelse節は省略できません。
-\begin{verbatim}
+同様にif文もCの三項演算子のように値を返します。
+if文のelse節は省略できません。
+if文の構文は\lstinline{if 式1 then 式2 else 式3}（ただし式1の型はbool, 式2の型=式3の型）です。
+型付けに関しては\ref{sec:static-typing}章で詳しく説明します。
+
+\begin{lstlisting}[caption=if文は値,label=doce:if-statement]
 - if true then 1 else 2;
-val it = 1 : int
+@/val it = 1 : int/@
 - (if true then 1 else 2) + 1;
-val it = 2 : int
-\end{verbatim}
+@/val it = 2 : int/@
+\end{lstlisting}
 
-\subsection{静的な型検査}
-\label{sec-4-2}
-SMLでは静的に（コンパイル時）に型がつきます。
-動的型付け言語などと異なり型が合わないものはエラーになります。
 
-下の例ではint型の値とreal型（CのDoubleのこと）の値を加算しようとして型エラーになりました。
-\begin{verbatim}
+
+\section{静的な型検査}
+\label{sec:static-typing}
+
+SMLではプログラムは静的に（コンパイル時に）型付けされます。
+動的型付け言語などと異なり型が合わないものはこの時エラーになります。
+
+最初の例では\lstinline{int}型の値と\lstinline{real}型（CのDoubleのこと）の値を加算しようとして型エラーになりました。C言語などでは暗黙のキャストによりコンパイルが通りますが、SMLではこのような仕組みは存在せず、自分でキャスト関数を挿入する必要があります。
+これは書くのには面倒ですが、プログラムを安全にします。
+\footnote{暗黙のキャストはプログラムを危険にします。例えば浮動小数点数演算の精度・ポインタのキャストなどがプログラマの意識外で行われてしまいます。}
+
+次にif文に関する型エラーです。
+エラーメッセージを読めばなんとなく何がエラーになっているのか分かると思います。
+SMLのif文は、then節・else節で同じ型の値を返さなければなりません。
+下の例でthen節は\lstinline{int}型の値を返していますが、else節では\lstinline{bool}型の値を返しています。
+そのため型エラーが発生しました。
+
+\begin{lstlisting}[label=code:type-error1,caption=型エラー１]
 - 1 + 2.0;
-stdIn:5.1-5.8 Error: operator and operand don't agree [literal]
-  operator domain: int * int
-  operand:         int * real
-  in expression:
-    1 + 2.0
-\end{verbatim}
+@/stdIn:5.1-5.8 Error: operator and operand don't agree [literal] /@
+@/  operator domain: int * int  /@
+@/  operand:         int * real /@
+@/  in expression:              /@
+@/    1 + 2.0                   /@
+- if 1 > 2 then 1 else false;
+@/stdIn:21.1-21.27 Error: types of if branches do not agree [literal]/@
+@/  then branch: int                                                 /@
+@/  else branch: bool                                                /@
+@/  in expression:                                                   /@
+@/    if 1 > 2 then 1 else false                                     /@
+\end{lstlisting}
+
+次に関数が登場する例を見てみましょう。
+下の例では、まず関数\lstinline{print}の型を確認し、それを使おうとしています。
+関数の方は\lstinline{T1 -> T2}などと、アロー（\lstinline{->}）を用いて表されます。
+今はこの読み方は「\lstinline{T1}型の値を受け取ったら\lstinline{T2}型の値を返す」という理解でOKです。
+\ref{sec:funs}章でより詳しく確認します。
+
+関数適用の書式ですが 「関数名 引数1 引数2 ...」というような記法で書きます。
+C言語で関数適用を書くのとは違いカッコが必要ありません。
+\footnote{別に\lstinline{print("12")}と書いてもエラーではありませんがMLらしいスタイルではありません。省略できるカッコは省略していきましょう。}
+
+さて、\lstinline{int}型の値である12をプリントしようとしていますが、
+\lstinline{print}関数の型は\lstinline{string -> unit}で\lstinline{int}を受け取るようにはできておらず、型エラーになります。
+
+\begin{lstlisting}[caption=型エラー２,label=code:type-error2]
+(* print関数の型を確認しよう *)
+- print;
+@/val it = fn : string -> unit/@
+
+(* print型はstring型の値を受け取ってunit型の値を返すので、
+   intを受け取ったら型エラー *)
+- print 12;
+@/stdIn:4.1-4.9 Error: operator and operand don't agree [literal]/@
+@/  operator domain: string                                      /@
+@/  operand:         int                                         /@
+@/  in expression:                                               /@
+@/    print 12                                                   /@
+
+(* int型の値をstring型の値にキャストする関数をはさもう
+   ^ は文字列の結合のための演算子 *)
+- print (Int.toString 12 ^ "\n");
+@/12 /@
+@/val it = () : unit /@
+\end{lstlisting}
+
+
+\section{値の束縛・パターンマッチ}
+\subsection{val文}
+さて、変数・関数を定義する方法を学びましょう。まずは変数から。
+\begin{lstlisting}[caption={val文}, label={code:vals}]
+- val x = 12;
+@/val x = 12 : int/@
+
+- val y =
+    if x > 100
+    then Bool.toString true
+    else Real.toString 3.14;
+@/val y = "3.14" : string/@
+
+(* 新しい要素：タプル *)
+- val t1 = (1, 3.14);;
+@/val t1 = (1,3.14) : int * real/@
+
+- val t2 = (1 + 2, t1);;
+@/val t2 = (3,(1,3.14)) : int * (int * real)/@
+\end{lstlisting}
+
+val文は\lstinline{val 変数名 = 式}という形で書かれます。
+注意すべきなのは、デフォルトで変数はimmutable(変更不可能)であることです。
+そのため一度定義した値が変わらないことをコンパイルが保証してくれるのでプログラムを安全に開発することができます！
+これはCなどの言語を書いている人には違和感があるかもしれませんが、
+''Effective Java''などでもImmutable objectsはプログラムをシンプルにする・デフォルトでスレッドセーフである、
+など沢山の利点があることが主張されています。
+興味があればEffective Javaや\cite{objects-should-be-immutable}を読んでみてください。
+
+さて、ソースコード\ref{code:vals}の最後の例で新しい型、タプルが現れました。
+タプルというのは組み型と呼ばれで、複数の型の異なる要素をまとめた構造を作ることができます。
+例えば\lstinline{int}と\lstinline{real}型の値を１つにしているときには、
+\lstinline{int * real}のようにこの型は表現されます。タプルの要素は任意の型の要素が許されるので、
+\lstinline{int * (int * real)}などとタプルがネストすることも考えられます。
+
+さて、タプルを作る方法はただ\lstinline{(1, "2")}などと書くだけです。
+論理学などをやっている方はお分かりになると思いますが、導入規則には対で除去規則を導入しなければならないですよね？
+作り方がわかったところで、この構造を破壊する方法を学びましょう。
+
+\subsection{val文を用いたパターンマッチ}
+
+タプルから値を取り出すには、主にパターンマッチを用います。
+具体例を見て行きましょう。ソースコード\ref{code:pattern-match-vals}に例を示します。
+
+\begin{lstlisting}[caption=val文でパターンマッチ,label=code:pattern-match-vals]
+- val t1 = ("nj", "poly", "alice");
+@/val t1 = ("nj","poly","alice") : string * string * string/@
+- val (a, b, c) = t1;
+@/val a = "nj" : string   /@
+@/val b = "poly" : string /@
+@/val c = "alice" : string/@
+
+- a ^ " " ^ b ^ " " ^ c;
+@/val it = "nj poly alice" : string/@
+\end{lstlisting}
+
+さて、上の例ではまずタプル\lstinline{t1}を定義し、それをパターンマッチによって分解し中身の要素を取り出しました。
+val文には\lstinline{val 変数名 = 式}という形以外に\lstinline{val パターン = 式}という形を書くことが出来ます。
+\footnote{むしろvalのあとに来るものが変数名だけのケースは単純なパターンの１つで、「val パターン = 式」と覚えるのがより一般的です。}
+\lstinline{val (a,b,c) = t1}と書いた時、\lstinline{t1}の第一要素が\lstinline{a}に束縛・第二要素が\lstinline{b}に束縛・第三要素が\lstinline{c}に束縛されます。
+
+パターンマッチは、val式の左辺（パターン部分）と右辺（式の部分）の形が一致していなければなりません。
+ソースコード\ref{code:bad-pat}を見てみましょう。
+\begin{lstlisting}[caption=型が合わないパターンマッチ,label=code:bad-pat]
+- val (a, b) = (1, 2, 3);
+@/stdIn:20.5-20.23 Error: /@
+@/pattern and expression in val dec don't agree [tycon mismatch] /@
+@/  pattern:    'Z * 'Y           /@
+@/  expression:    int * int * int/@
+@/  in declaration:               /@
+@/    (a,b) = (1,2,3)             /@
+\end{lstlisting}
+
+上の例ではval文の左辺のパターンは２つの要素を受け取る形をしていますが、右辺の式の部分は３つの要素を持つタプルです。エラーメッセージでもパターンと式（expression）がミスマッチだと言っていますよね。
+
+\begin{itembox}[l]{コラム：どんなパターンが存在するの}
+
+\end{itembox}
+
+\section{関数・リスト}
+\subsection{関数を定義する}
+いよいよ関数型言語の味噌である関数について扱っていきます！
+\begin{lstlisting}[caption={単純な関数の定義},label={code:simple-funs}]
+fun double a = a * 2
+@/val double = fn : int -> int/@
+\end{lstlisting}
+\subsection{再帰関数}
+TODO:
+fib, factなどを説明する
+帰納法的な考え方
+
+\subsection{リスト}
+リストはImmutableなデータ構造で、データの列を扱うときに配列よりも関数型プログラミングでは良く用いられる重要なデータ構造です。
+
+リストは今までの型とは少し異なり、listだけでは型を表しません。型の一部をパラメータ化しており、int listやstring listなど、「何かのリスト」であることを型の上で表現します。
+これを取り扱うための関数をいくつか定義していきましょう。
+
+\subsection{高階関数}
+TODO:
+map, filter, exists, forallなどを説明する
+match文を説明する
+匿名関数
+
+\subsection{カリー化・部分適用}
+\begin{itembox}[l]{コラム：演算子？}
+  SMLでは演算子はただの関数です。
+  TODO:続きを書く
+
+\end{itembox}
+
+\section{レコード}
+TODO:
+構造の作り方・壊し方（fun文・case文でのパターンマッチ）
+
+\section{ユーザ定義データ型}
+\subsection{ヴァリアントの定義}
+TODO:
+\begin{itemize}
+\item case文で分解する
+\item enumとの比較
+\end{itemize}
+
+\begin{lstlisting}[caption=単純なヴァリアント,label=code:variants]
+datatype inputs = NOTHING | ARG of string | FLAG of string * bool;
+@/datatype inputs = ARG of string | FLAG of string * bool | NOTHING/@
+
+val l = [FLAG ("-c", false), FLAG ("-i", true), ARG "a.ml", ARG "b.ml"];
+@/val l = [FLAG ("-c",false),FLAG ("-i",true),ARG "a.ml",ARG "b.ml"]/@
+@/  : inputs list                                                   /@
+\end{lstlisting}
+
+\subsection{再帰データ構造}
+TODO:
+\begin{itemize}
+\item 上の定義の問題[NOTHING, NOTHING]みたいなのがかけることを指摘
+\item リストっぽい構造にする
+\end{itemize}
+
+\begin{itembox}[l]{コラム：多相ヴァリアント}
+  TODO:
+OCamlで多相ヴァリアントを説明
+\end{itembox}
+
+\section{手続きプログラミング}
+\subsection{参照型}
+\subsection{例外}
+\subsection{繰り返し}
+
+\begin{itembox}[l]{コラム：手続きとの付き合い方}
+
+\end{itembox}
+
+\section{モジュール}
+\subsection{ライブラリの利用}
+\subsection{モジュールの定義}
+\subsection{シグニチャ}
+\begin{itembox}[l]{コラム：オブジェクトのカプセル化}
+\end{itembox}
+\subsection{ファンクタ}
+
+\part{プログララムの例}
+
+\begin{thebibliography}{9}
+  \bibitem{objects-should-be-immutable} Yegor Bugayenko, ``Objects Should Be Immutable''\\
+    \url{http://www.yegor256.com/2014/06/09/objects-should-be-immutable.html}
+\end{thebibliography}
+
+
 \end{document}
