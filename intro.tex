@@ -1,7 +1,7 @@
 % Created 2015-08-27 木 18:07
 \documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage{graphicx}
+\usepackage[dvipdfmx]{graphicx}
 \usepackage{ascmac} % 枠付き環境のため
 \usepackage{amsmath}
 \usepackage{hyperref}
@@ -23,7 +23,10 @@
 
 \lstdefinelanguage{SML} {
   keywords = {
-    if,then,else,val,rec,let,in,end,fun,fn,exception,case,of,datatype,type,op
+    if,then,else,val,rec,let,in,end,fun,fn,exception,handle,raise,
+    case,of,datatype,type,op,
+    ref,struct,structure,signature,sig,functor,before,local,as,
+    SOME,NONE
   },
   morecomment=[n]{(*}{*)},%
   ndkeywords={true,false,int,bool,string,char},
@@ -58,77 +61,138 @@
 \maketitle
 \tableofcontents
 
-\part{Standard MLの世界へようこそ！}
-Standard ML（以下SML）の世界へようこそ！
+\setlength{\parskip}{0.1cm}
 
-TODO:
-SMLがどんな言語か説明する
+% \newcommand{\beforesection}[1]{
+%  \vspace{-5mm}
+% }
+
+% \newcommand{\beforesubsection}[1]{
+%  \vspace{-5mm}
+% }
+\part{Standard MLの世界へようこそ！}
+Standard ML（以下SML）の世界へようこそ！\\
+SMLは非純粋（副作用、破壊的代入が出来る）な関数型言語の一種です。
+Strictな評価戦略・静的な型付け・高階関数など静的型付けを行う関数型言語として標準的な機能を持つ、
+MLと呼ばれる歴史ある言語ファミリに属しています。\\
+特徴としてはSchemeのように言語の定義が存在します\cite{definition}。
+言語の定義が存在すると、言語を処理系を叩いて理解するのではなく、より定式化されたものを対象に理解することが出来ます。
+
+個人的な私見ですが、MLは関数型言語を学ぶための言語として最適です。
+わかりやすい言語設計で、特に型システムは関数型言語でも標準的で分かりやすいです。
+日本では関数型言語として名前が上がるのはまずHaskell, F\#などかもしれませんが、
+これらの型システムもベースはMLで主に用いられるHindley-Milner型システムをベースにしています。
+
+特に言語処理系に興味がある人にとっては、SMLは様々な実験的な処理系が作られてきたのでSMLを
+学ぶ意義が大いにあります。
+CPS変換によってすべての関数呼び出しが末尾再帰呼出し化される''Standar ML of New Jersey''や
+Whole optimized compilerとして有名な、分割コンパイルを諦めて強力な最適化がかかる''MLton'',
+定理照明器Isabelle/HOLの開発に用いられているPoly/MLなど。
+Type Passingを全面的に利用しようとして夢破れたTILなど、実験的な論文レベルの処理系もたくさんあります。
+
+ぜひこの同人誌を楽しく読むために、SMLのコア言語を短時間でコンパクトに学んで下さい。
 
 \section{本チュートリアルの読み方}
 このチュートリアルは足早に他のプログラミング言語を何か１つ以上知っている人向けに
 SMLのコア言語の書き方をSML/NJを題材に説明します。
-関数型言語の知識はあると理解が簡単かと思いますが必要としません。その都度説明します。
-
-セクションごとにプログラム例が登場するので、
-ぜひ自分のマシンにSML処理系をインストールして試しながら読んでみて下さい。
-
+関数型言語の知識はあると理解が簡単かと思いますが必要としません。その都度説明します。\\
 途中のコラムでは、プログラミング言語マニア向けに言語デザイン・SMLの考え方・他の言語との比較に触れます。
 コラムはそこまでの知識では理解できない用語や概念が含まれますので、
 分からなければ後で読んでもらうのが良いと思います。
 
 \section{SML/NJ}
 \subsection{SML/NJのインストール}
-\subsection{対話環境について}
-TODO:
+基本的にはインストールの指示に従えば特に困難なくインストールすることが出来ます。\\
+\url{http://www.smlnj.org/dist/working/index.html} で最新版を確認してください。
 \begin{itemize}
-\item ハローワールド
-\item 対話環境の見方を説明する
-\item ファイルのロード
+\item Windowsの場合\\
+  Windows向けにインストーラが存在します。
+  上で示したURLから最新版をクリックし、.msiファイルをダウンロードし、指示に従って下さい。\\
+  Windowsではコマンドプロンプト上でSML/NJの対話環境が動くことになります。
+  コマンドプロンプトではコピーアンドペーストや基本操作がしづらいと思うので
+  Emacsなど他のプログラム上でコマンドプロンプトを実行するようなプログラムが必要かもしれません。
+\item Linux系OSの場合\\
+  多くのメジャーディストリビューションではパッケージ管理ソフト経由でインストールすることが出来ます。
+  執筆現在(2015年10月12日)で最新版は110.78です、パッケージ管理ソフト経由で
+  インストールできるコンパイラは古いかもしれませんが基本的には問題ないはずです。
+  \lstinline{ml-build}などツールがうまく動かないようならばソースコードからコンパイルして下さい。
 \end{itemize}
+\subsection{対話環境について}
+WIndowsを例に見方を説明します。
 
-\subsection{}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.8]{./interactive.eps}
+  \caption{対話環境}
+  \label{fig:hello}
+\end{figure}
+
+コマンドプロンプト上でsmlと入力し、SML/NJを起動しましょう。
+その後上の画像のように、\lstinline{print "Hello, World !\n";}と入力してみて下さい。
+セミコロンも必ず必要です。画面に正しくプリントされれば成功です！
+
+対話環境の見方を説明します。
+\begin{itemize}
+\item 各行の最初のハイフン(\lstinline{-})は対話環境が挿入するプロンプトです。
+  プログラムの一部ではないので気にしてくて大丈夫です。
+\item プログラムが複数行に渡る時は、対話環境がイコール(\lstinline{=})記号を自動的に挿入します。
+  これもプログラムの一部ではないので気にしてくて大丈夫です。
+\item 行の最後に必要なセミコロン(\lstinline{;})は対話環境に入力が終わったことを
+  伝えるために必要な文字です。これがなければずっと対話環境は入力待ちをします。
+\item 画面で\lstinline{Hello, World !}の次の行にかかれているように、
+  プログラムを実行（これ以降評価と呼びます）すると計算結果とそれの型がプリントされます。
+  これによってユーザはインタラクティブに関数を定義し、計算結果を手早く
+  確認しながらプログラミングを続けることが出来ます。
+\item 対話環境にいちいち打ち込むのは面倒かもしれません。
+  ファイルのロードには\lstinline{use "./test.sml";}のように、\lstinline{use}関数を使って
+  ファイルを読み込みます。この場合はファイルはカレントディレクトリにあるため特に指定していませんが、
+  ファイルのパスを入力して下さい。そうすると、ファイルに書かれた定義の読み込みやプログラムの評価が行われます。
+\end{itemize}
 
 \part{基礎文法}
 
-\section{全ては式}
+\section{式を組み合わせる}
 
-例えばC言語では値を返さないものありますが、
+例えばC言語ではvoidを返す関数の関数適用など、値を返さない式もありますが、
 SMLでは（関数宣言・型宣言などの宣言は除いて）全ての要素は値を返します。
-SMLに限らず一般に関数型言語では値を組み合わせてプログラミングしていきます。
-
-\begin{lstlisting}[caption=全ては値！,label=code:values]
-- 1
-@/val it = 1 : int/@
-- "god is god";
-@/val it = "god is god" : string/@
-\end{lstlisting}
+値を返すものを式と呼びましょう。
+SMLに限らず一般に関数型言語では式を組み合わせてプログラミングしていきます。
+以後、式と文は明確に区別されているので気をつけて下さい。
 
 同様にif文もCの三項演算子のように値を返します。
 if文のelse節は省略できません。
 if文の構文は\lstinline{if 式1 then 式2 else 式3}（ただし式1の型はbool, 式2の型=式3の型）です。
 型付けに関しては\ref{sec:static-typing}章で詳しく説明します。
 
-\begin{lstlisting}[caption=if文は値,label=doce:if-statement]
+\begin{lstlisting}[caption=if文は式,label=code:if-statement]
 - if true then 1 else 2;
 @/val it = 1 : int/@
+
 - (if true then 1 else 2) + 1;
 @/val it = 2 : int/@
+
+- (if false then 1 + 2 else 3 + 4) * (if true then 4 else 6);
+@/val it = 28 : int/@
 \end{lstlisting}
-
-
 
 \section{静的な型検査}
 \label{sec:static-typing}
 
 SMLではプログラムは静的に（コンパイル時に）型付けされます。
-動的型付け言語などと異なり型が合わないものはこの時エラーになります。
+動的型付け(実行時に型の整合性を確認する)言語などと異なり型が合わないものはこの時エラーになります。
+静的型付けを行う言語の例として、CやJavaを思い浮かべると
+変数を宣言するたびに冗長な型を書かなくてはいけない、いちいち変更するのに面倒
+というイメージがあるかもしれません。\\
+SMLには「型推論」と呼ばれる、型をプログラマが書かなくても
+処理系が補ってくれる、という機能があります。
+そのためソースコード\ref{code:if-statement}でも一切型を書かなくても
+返り値は\lstinline{int}だな、と判断してくれました。
 
-最初の例では\lstinline{int}型の値と\lstinline{real}型（CのDoubleのこと）の値を加算しようとして型エラーになりました。C言語などでは暗黙のキャストによりコンパイルが通りますが、SMLではこのような仕組みは存在せず、自分でキャスト関数を挿入する必要があります。
+さて、型エラーになる例を少し見てみましょう。ソースコード\ref{code:type-error1}を見て下さい。\\
+最初の例では\lstinline{int}型の値と\lstinline{real}型（CのDoubleのこと）の値を加算しようとして型エラーになりました。C言語などでは暗黙のキャストにより型検査に成功しますが、SMLではこのような仕組みは存在せず自分でキャスト関数を挿入する必要があります。
 これは書くのには面倒ですが、プログラムを安全にします。
-\footnote{暗黙のキャストはプログラムを危険にします。例えば浮動小数点数演算の精度・ポインタのキャストなどがプログラマの意識外で行われてしまいます。}
-
-次にif文に関する型エラーです。
-エラーメッセージを読めばなんとなく何がエラーになっているのか分かると思います。
+\footnote{暗黙のキャストはプログラムを危険にします。例えば浮動小数点数演算の精度・ポインタのキャストなどがプログラマの意識外で行われてしまいます。}\\
+その次にif文に関する型エラーです。
 SMLのif文は、then節・else節で同じ型の値を返さなければなりません。
 下の例でthen節は\lstinline{int}型の値を返していますが、else節では\lstinline{bool}型の値を返しています。
 そのため型エラーが発生しました。
@@ -148,9 +212,9 @@ SMLのif文は、then節・else節で同じ型の値を返さなければなり�
 @/    if 1 > 2 then 1 else false                                     /@
 \end{lstlisting}
 
-次に関数が登場する例を見てみましょう。
+次に関数が登場する例を見てみましょう。ソースコード\ref{code:type-error2}を見て下さい。
 下の例では、まず関数\lstinline{print}の型を確認し、それを使おうとしています。
-関数の方は\lstinline{T1 -> T2}などと、アロー（\lstinline{->}）を用いて表されます。
+関数の型は\lstinline{T1 -> T2}などと、アロー（\lstinline{->}）を用いて表されます。
 今はこの読み方は「\lstinline{T1}型の値を受け取ったら\lstinline{T2}型の値を返す」という理解でOKです。
 \ref{sec:funs}章でより詳しく確認します。
 
@@ -160,7 +224,7 @@ C言語で関数適用を書くのとは違いカッコが必要ありません�
 省略できるカッコは省略していきましょう。
 
 さて、\lstinline{int}型の値である12をプリントしようとしていますが、
-\lstinline{print}関数の型は\lstinline{string -> unit}で\lstinline{int}を受け取るようにはできておらず、型エラーになります。
+\lstinline{print}関数の型は\lstinline{string -> unit}で、\lstinline{int}を受け取るようにはできておらず、型エラーになります。
 
 \begin{lstlisting}[caption=型エラー２,label=code:type-error2]
 (* print関数の型を確認しよう *)
@@ -193,8 +257,7 @@ C言語で関数適用を書くのとは違いカッコが必要ありません�
 
 - val y =
     if x > 100
-    then Bool.toString true
-    else Real.toString 3.14;
+    then Bool.toString true else Real.toString 3.14;
 @/val y = "3.14" : string/@
 
 (* 新しい要素：タプル *)
@@ -208,7 +271,7 @@ C言語で関数適用を書くのとは違いカッコが必要ありません�
 val文は\lstinline{val 変数名 = 式}という形で書かれます。
 注意すべきなのは、デフォルトで変数はimmutable(変更不可能)であることです。
 そのため一度定義した値が変わらないことをコンパイルが保証してくれるのでプログラムを安全に開発することができます！
-これはCなどの言語を書いている人には違和感があるかもしれませんが、
+これはC・Javaなどの言語を書いている人には違和感があるかもしれませんが、
 ''Effective Java''などでもImmutable objectsはプログラムをシンプルにする・デフォルトでスレッドセーフである、
 など沢山の利点があることが主張されています。
 興味があればEffective Javaや\cite{objects-should-be-immutable}を読んでみてください。
@@ -224,8 +287,8 @@ val文は\lstinline{val 変数名 = 式}という形で書かれます。
 作り方がわかったところで、この構造を破壊する方法を学びましょう。
 
 その前に、スコープの話をしましょう。ソースコード\ref{code:vals}を見て下さい。
-SMLでは静的スコープを採用しています。
-そのため、一度参照したものの参照先が変わることはありません。
+SMLではレキシカルスコープを採用しています。
+また一度参照したものの参照先が変わることはありません。
 
 \begin{lstlisting}[caption=valのスコープ,label=code:vals]
 - val name = "nadesico";
@@ -261,9 +324,6 @@ SMLでは静的スコープを採用しています。
 @/val a = "nj" : string   /@
 @/val b = "poly" : string /@
 @/val c = "alice" : string/@
-
-- a ^ " " ^ b ^ " " ^ c;
-@/val it = "nj poly alice" : string/@
 \end{lstlisting}
 
 さて、上の例ではまずタプル\lstinline{t1}を定義し、それをパターンマッチによって分解し中身の要素を取り出しました。
@@ -271,6 +331,17 @@ val文には\lstinline{val 変数名 = 式}という形以外に\lstinline{val �
 むしろvalのあとに来るものが変数名だけのケースは単純なパターンの１つで、「val パターン = 式」と覚えるのがより一般的です。
 \lstinline{val (a,b,c) = t1}と書いた時、\lstinline{t1}の第一要素が\lstinline{a}に束縛・
 第二要素が\lstinline{b}に束縛・第三要素が\lstinline{c}に束縛されます。
+
+タプルの中身の要素を取り出したい、
+でもタプル自体にも名前をつけてアクセスできるようにしたい場合にはasパターンを使います。
+ソースコード\ref{code:as-pattern}を見て下さい。
+
+\begin{lstlisting}[caption=asパターン,label=code:as-pattern]
+- val t1 as (a, b) = (1 + 2, 3 * 4);
+@/val t1 = (3,12) : int * int/@
+@/val a = 3 : int/@
+@/val b = 12 : int/@
+\end{lstlisting}
 
 パターンマッチは、val式の左辺（パターンの部分）と右辺（式の部分）の形が一致していなければなりません。
 ソースコード\ref{code:bad-pat}を見てみましょう。
@@ -309,17 +380,11 @@ patrow := ...                         % ワイルドカード
 longvid % ヴァリアント名
 vid     % 変数名
 ty      % 型
-op      % 演算子
 \end{Verbatim}
 
-これを見て重箱の隅をつついてみましょう:)。
-
-まず定数はパターンです！
-そのため\lstinline{val 1 = 2}みたいなコードは許されます
+これを見て重箱の隅をつついてみましょう :)。まず定数はパターンです！
+\lstinline{val 1 = 2}みたいな定数パターンのパターンマッチで、正しいコードです。
 （パターンマッチに失敗したと言って実行時エラーになります）。
-
-atpatに(pat)があるので、意味もなくカッコがネストした
-\lstinline{val ((((((x)))))) = 1}のようなケースも許されます。
 
 ヴァリアントを中置演算子にした形はパターンマッチすることが許されるので、
 \begin{lstlisting}[caption=中置形式のヴァリアントのパターンマッチ]
@@ -331,40 +396,39 @@ val x A y = ...
 みたいなコードもかけます！
 
 最後に、無駄に複雑なパターンを書いて終わりましょう。
+ほぼすべてのパターンのケースを用いて複雑なパターンマッチを書いてみました。
 \begin{lstlisting}[caption=複雑なパターン]
-datatype t = A of t list * int | B;
-infix A;
+- datatype t = A of t list * int | B;
+- infix A;
 
-val a as [x, y A z, B] A b = [B, [] A 1, B] A 2;
+- val a as ([x, y A z, B : t] A 2, {r1,...}) = ([B, [] A 1, B] A 2, {r1=1,r2="fuga",r3=[]});
+/@val x = B : t      @/
+/@val y = [] : t list@/
+/@val z = 1 : int    @/
+/@val r1 = 1 : int   @/
 
-@/val a = [B,[] A 1,B] A 2 : t/@
-@/val x = B : t               /@
-@/val y = [] : t list         /@
-@/val z = 1 : int             /@
-@/val b = 2 : int             /@
 \end{lstlisting}
 \end{itembox}
 
 \subsection{let式}
 これまではトップレベルに定義を並べるだけでしたが、より複雑な定義をする時にはこれでは不便な時があります。
-
 ネストした定義、定義の中にそれの補助のための定義を書けるようにしましょう。
 
 これの必要性を理解するために、ライブラリを作ることを想像して下さい。
-例えばグラフ操作ライブラリを作っている時、ユーザに触らせる関数はどんな組み合わせをしてもグラフ構造が
-壊れないようにしたいけれども、処理の途中で使う受け取ったグラフを不正なグラフにして返すような関数は
-利用者が使えないようにしたいですよね。
-
+例えばグラフ操作ライブラリを作っている時、
+ユーザに公開する関数はグラフ構造を壊さない関数のみにしたいですよね。
+処理の途中でのみ使う、受け取ったグラフを不正なグラフにして返すような関数は
+安全性のために利用者が使えないようにしたいです。
 そのために、カプセル化などの仕組みを用いて
-途中で用いる操作関数や途中状態の値はアクセス出来ないようにすることが多いですね。
-これをライブラリやクラス単位ではなく、式単位で行っていけばより安全性が高まります。
-それだけではなく、この関数・値はこの式の中でしか使わないんだな、
-などと言ったプログラマの意図をコードの中に表しやすくなります。
-\footnote{またval文しか導入していませんが、すぐに関数定義が登場して定義の中に関数定義が書けるようになります。}
+途中で用いる操作関数や途中状態の値はアクセス出来ないようにします。
+これをライブラリやクラス単位ではなく、
+式単位で外に公開しない補助的な定義ができればより安全性が高まります。
+それだけではなく、公開する関数と並べて書くのではなく外に公開しない形で書くことにより
+この関数・値はこの式の中でしか使わないんだな、
+といったプログラマの意図をコードの中に表しやすくなります。
 このような用途のためにlet式を導入しましょう。
 
-let式の書き方は\lstinline{let 宣言１ 宣言２ ... in 式 end}です。
-\footnote{Lisp系言語のlet式と殆ど一緒です。}
+let式の書き方は\lstinline{let 宣言１ 宣言２ ... in 式 end}です（Lisp系言語のlet式と殆ど一緒です）。
 \lstinline{end}は忘れやすいですが必須なので気をつけて下さい。
 
 例を見てみましょう。ソースコード\ref{code:let-expression}を見て下さい。
@@ -387,8 +451,7 @@ let式の書き方は\lstinline{let 宣言１ 宣言２ ... in 式 end}です。
 
 上の例では、まず半径２の円の面積(area)を計算するために
 円周率\lstinline{pi}と\lstinline{r}を定義してin以降で使用しています。
-
-またlet式はれっきとした式です。
+let式はれっきとした式です。
 なので他の\lstinline{1}や\lstinline{"hoge" ^ "fuga"}といった式と同様に使うことが出来ます。
 
 またlet式はスコープを作ります。
@@ -434,15 +497,14 @@ C言語のようにカッコは必要ありません。
 関数\lstinline{plus}の中でプラス演算子を使っていますが、
 これは\lstinline{int}型の要素を２つ取ることを
 コンパイラ\footnote{正確にはこの場合対話環境ですが :)}は知っているため、
-x・yの型は\lstinline{int}型であると推論します。
+x・yの型は\lstinline{int}型であると推論されます。
 引数の型も推論でき、\lstinline{x + y}の返り値もintであるので、
 関数\lstinline{plus}の型は\lstinline{(int * int) -> int}となります。
 
 fun文の引数部分のパターンに対しても型推論が働きます。
 関数\lstinline{plus}では、引数部分にタプルパターンを書いています。
 この場合関数\lstinline{plus}は引数は１つで、それはタプルであると推論されます。
-
-その後仮引数のタプルの要素であるx, yの型はint型であることが使われ方からわかるので、
+その後仮引数のタプルの要素であるx, yの型は\lstinline{int}型であることが使われ方からわかるので、
 関数\lstinline{plus}は\lstinline{(int * int) -> int}型を持つことがわかります。
 
 関数の定義にlet式を使うことが出来ます。
@@ -460,7 +522,7 @@ let式の書き方は\lstinline{let 宣言１ 宣言２ ... in 式 end}と書き
     in
       printWithBreak (Int.toString (pow x n))
     end;
-@/val printPow = fn : int -> int -> unit@/
+@/val printPow = fn : int -> int -> unit/@
 
 - printPow 3 3;
 @/27/@
@@ -482,11 +544,9 @@ let式の書き方は\lstinline{let 宣言１ 宣言２ ... in 式 end}と書き
 @/val it = 3 : int/@
 \end{lstlisting}
 
-演算子というのは記法は異なりますがただの関数だということが分かりましたが、
+演算子というのは記法は異なりますがただの関数だということが分かりました。
 反対に関数も演算子にすることが出来ます。
-
 例を見てみましょう。ソースコード\ref{code:infix}を見て下さい。
-
 このコードでは、べき乗関数\lstinline{power}を定義し、それを中置記法で使えるようにしています。
 
 \begin{lstlisting}[caption=演算子の定義,label=code:infix]
@@ -495,7 +555,7 @@ let式の書き方は\lstinline{let 宣言１ 宣言２ ... in 式 end}と書き
 @/val power = fn : (int * int) -> int/@
 
 (* powerを中置記法でかけるようにする宣言 *)
-- infix power;
+- infix 4 power;
 @/nonfix power/@
 
 (* 使ってみよう *)
@@ -504,13 +564,12 @@ let式の書き方は\lstinline{let 宣言１ 宣言２ ... in 式 end}と書き
 \end{lstlisting}
 
 \lstinline{power}関数は普通の数学で扱うようなべき乗の定義通りです。
-infix宣言をするとこれを中置記法で使えるようになります。
-
+infix宣言をするとこれを中置記法で使えるようになります(infixの後の数字は演算子の結合の強さを指定。省略可)。
 中置記法でかけるようにするためには、
 関数は型が\lstinline{('a * 'b) -> ...}という形をしている必要があります。
 そうでないと演算子を定義できても、その演算子にどんな入力を与えても型エラーになります。
 
-演算子にはやはり記号を使いたいですよね。記号で構成された関数も他の関数と動揺の方法で定義できます。
+さて、演算子にはやはり記号を使いたいですよね。記号で構成された関数も他の関数と動揺の方法で定義できます。
 ソースコード\ref{code:operator}では\lstinline{power}と書かずに
 \lstinline{**}で住むように新たな演算子を定義しています。
 
@@ -533,11 +592,17 @@ infix宣言をするとこれを中置記法で使えるようになります。
 - 2 ** 10;
 @/val it = 1024 : int/@
 \end{lstlisting}
+
+infix宣言により中置記法で書くこととなった関数は\lstinline{nonfix}により
+普通の記法で書かれるように出来ます。
+またinfix宣言は宣言であるため、let式の宣言が並ぶ部分に書くことが出来ます。
+利便性のため一部分でだけで中置記法を用いることが出来るようになります。
+\footnote{つまりSMLではプログラム中で演算子の結合の強さが変わったり中置記法になったりそうでなくなったりするわけです。パーサーがどうなっているのか想像してみて下さい……。SML KitのParsingの論文には''Syntactacally, SML is a nightmare''\cite{SML-KIT}と書かれています。}
+
 \subsection{パラメトリック多相性(Parametric Polymorphism)}
 
 今までの関数はすべての型の構成要素が具体的な型（intやreal）になっていました。
 型推論の説明でも、定義の中に現れる演算子や関数の型から引数や関数の型を決定していると説明しました。
-
 さて、もし関数を定義するとき、型の制約が何もなかったらどんな型を付ければよいでしょうか？
 具体的には\lstinline{fun id x = x}のように関数\lstinline{id}を定義した時、
 \lstinline{x}にはなんの型の制約はありません。この関数はどんな型を持つべきでしょうか。
@@ -559,7 +624,6 @@ infix宣言をするとこれを中置記法で使えるようになります。
 そのため、\lstinline{id 1}の返り値も\lstinline{int}であることがわかります。
 
 このような、型変数が含まれる関数のことを「多相関数」と呼びます。
-
 単純ですがよく使われる多相関数をいくつか定義してみましょう。
 
 \begin{lstlisting}[caption=多相関数たち,label=code:poly]
@@ -573,17 +637,20 @@ infix宣言をするとこれを中置記法で使えるようになります。
 @/val t1 = (1,"hoge") : int * string/@
 - fst t1 + 2;
 @/val it = 3 : int/@
-
-- fun revApp x f = f x;
-val revApp = fn : 'a -> ('a -> 'b) -> 'b
 \end{lstlisting}
 
+\lstinline{'a}と\lstinline{'b}は違う型変数であることに気をつけて下さい。
+もし\lstinline{fst:'a * 'a -> 'a}ならば、同じ型の要素が２つ入った
+タプルしか受け取ることが出来ませんが、\lstinline{fst: 'a * 'b -> 'a}なので、
+違う型の要素が２つ入ったタプルを受け取ることが出来ます。
+
+このあたりの型の制約が書けることが、ただC言語の\lstinline{void*}型とは異なる部分です。
+\lstinline{void*}に対しては型チェックをされませんが、型変数に対しては整合性が確認されます。
 
 \subsection{再帰関数}
 
 さて、いよいよ繰り返しを含むプログラムを書いていきましょう。
 関数型言語ではよく繰り返しを書くために、再帰関数を用います。
-
 例を見てきましょう。ソースコード\ref{code:recursive-funs}をみてください。
 基本的には他の言語で書き下したのと同様です。
 
@@ -594,7 +661,6 @@ val revApp = fn : 'a -> ('a -> 'b) -> 'b
 - fact 5;
 @/val it = 120 : int/@
 \end{lstlisting}
-
 
 再帰関数で気をつけることは特にありません。
 せいぜい、再帰呼出しのために今定義しようとしている関数名がfun文の右辺（fun文のイコール以降の式）に現れる、くらいでしょうか。
@@ -620,9 +686,8 @@ $n * fact (n - 1)$も$n$の階乗を計算する式として正しい」
 この考え方を用いて後で何回も再帰関数の説明をします。
 
 \subsection{高階関数}
-さて、関数型（アロー型）の表現は\lstinline{T1 -> T2}という形で表されます。
-この意味はT1型の値を引数に取り、T2型の値を返す関数という意味でした
-
+関数型（アロー型）の表現は\lstinline{T1 -> T2}という形で表されます。
+この意味はT1型の値を引数に取り、T2型の値を返す関数という意味でした。
 この例でT1やT2はアロー型であることも許されます。
 そのような関数はどんな性質を持ちうるのでしょうか？例を見てみましょう。
 
@@ -649,13 +714,11 @@ $n * fact (n - 1)$も$n$の階乗を計算する式として正しい」
 ソースコード\ref{code:first-order-funs}の上の例では、
 \lstinline{int -> (int -> int)}型の２つ引数を取り、その引数を足すだけの関数\lstinline{plus}を定義しています
 （プログラム中の\lstinline{int -> int -> int}はカッコを省略した形式です）。
-
 この関数に対しても今までの読み方と同じ解釈をすることが出来ます。
 すなわち、関数\lstinline{plus}は\lstinline{int}型の値を１つ受けると\lstinline{int -> int}型の値を返す、
 関数を返す関数なのです！
 
 関数を返す関数は、同じような関数をたくさん定義する場合に便利です。
-（この便利さは\ref{sec:list}節を見てみると実感できると思います）。
 例では同じような形をするだろう、関数\lstinline{plusOne}と\lstinline{plusTwo}を定義しています。
 関数\lstinline{plusOne}は関数で、一つ引数をとり1足す関数になっています
 （関数\lstinline{plus}の仮引数のxにすでに１が入っていると考えて下さい）。
@@ -676,10 +739,8 @@ apply A to Bは、意味はAをB当てはめるという意味です。
 
 さて、最後にこれらの要素を使った例として微分関数\lstinline{diff}を定義してみましょう。
 ソースコード\ref{code:diff}を見て下さい。
-
 微分演算子$'$（この例では\lstinline{diff}関数）
 はまず\lstinline{real -> real}型の関数fを受け取り、一引数関数を返す関数です。
-
 微分演算の定義を確認してみると、
 $f' = \lim_{a \to 0}\frac{f(x+a) - f(x)}{a}$
 でしたね。今回は極限は近似して$a = 0.0000000001$として計算してみます。
@@ -704,42 +765,59 @@ $f' = \lim_{a \to 0}\frac{f(x+a) - f(x)}{a}$
 関数\lstinline{diff}を定義した後、
 確認のため標準ライブラリのMathモジュールに含まれる
 \lstinline{sin}関数を微分して\lstinline{myCos}を定義しました。
-
 その後、ライブラリに含まれる\lstinline{cos}関数と\lstinline{myCos}に同じ引数を与え、
-出力結果を比べられるようにしました。
+出力結果を比べられるようにしました。誤差はあるものの、概ね\lstinline{cos}関数として動作しているように見えますね。
 
-誤差はあるものの、概ね\lstinline{cos}関数として動作しているように見えますね。
+\begin{itembox}[l]{コラム：for文にあたる関数を作る}
+高階関数・多相性がある言語ではfor文やwhile文といった、言語組み込みの制御構造を作る構文に相当する
+ものすら関数として表すことが出来ます。まずはfor文を作ってみましょう。
+大域脱出のために例外を用いています。
+
+\begin{lstlisting}[caption=for文相当の関数,label=code:for]
+exception Break
+fun for f s e step =
+  let
+    fun loop cnt = if cnt > e
+                   then () else ((f cnt handle Break => ()); loop (cnt + step))
+  in
+    loop s
+  end;
+@/val iteri = fn : (int -> 'a) -> int -> int -> int -> unit/@
+
+- for (fn x => print (Int.toString x)) 0 10 1;
+012345678910val it = () : unit
+\end{lstlisting}
+
+これではうまくグローバル変数を書き換えたりできない？クロージャーをうまく使いましょう。
+\begin{lstlisting}[caption=関数forを使ってみる,label=code:use-iteri]
+- fun fact n = let val sum = ref 1 in
+     for (fn x => sum := x * !sum) 1 n 1; !sum
+   end;
+val fact = fn : int -> int
+- fact 5;
+val it = 120 : int
+\end{lstlisting}
+
+\end{itembox}
 
 \begin{itembox}[l]{コラム：アドホック多相性}
 関数\lstinline{plus}の型を見て不自然に思った方もいるかもしれません。\\
-プラス演算子は\lstinline{3.14 + 1.1}のように、real型の値の演算にも用いられます
-（対話環境で評価してみて下さい）。
-
+プラス演算子は\lstinline{3.14 + 1.1}のように、real型の値の演算にも用いられます。
 しかし、ソースコード\ref{code:first-order-funs}の関数\lstinline{plus}は
 \lstinline{int -> int}型の関数であると推論されています。
 \lstinline{real -> real}型のplusRealを定義するためには\lstinline{fun plusReal (x:real) y = x + y}
 のように型注釈を書く必要があります。
 
-\vspace{0.3cm}
-
 関数\lstinline{plus}に\lstinline{int -> int}型がつくことは少し変です。
 なぜならプラス演算子はreal型にも使えるはずなので、より一般的な型がついてもいいはずです。
 
 これはSMLの型システムに由来します。
-SMLでは（TODO:SMLには、というのは主語が大きすぎる？）Haskellの型クラスのような
-「型パラメータ'a、ただし'aの動く範囲は制限されている」というような事がかけません。
-
 SMLの型システムで表せるのは「何でも受け取る'a」もしくは「int、realのような具体型」だけです。
-そのため、SMLではプラス演算子にようにアドホックに（場当たり的に）演算子は多相的になっているものがありますが、
+そのため、SMLではプラス演算子にようにアドホックに演算子は多相的になっているものがありますが、
 それを型として表すことが出来ません。
 
-\vspace{0.3cm}
-
 この問題に対する解決策はいくつか考えられています。
-
-一つは型クラスです。型クラスでは、上で述べたような
-「型パラメータ'a、ただし'aの動く範囲は制限されている」という事がかけます。
-
+一つは型クラスです。型クラスでは、「型パラメータ'a、ただし'aの動く範囲は制限されている」という事がかけます。
 Haskellでは例えば、加算演算子は\lstinline{Num a => a -> a -> a}という型を持ちます。
 \lstinline{Num a}の意味は「型パラメータaはNumに属している型に限られる」という意味です。
 
@@ -763,7 +841,6 @@ fun plus x = x + x;
 は型変数'aはint, IntInt.int, real, ...のどれかであることを表しています。
 このような型を持つ関数もユーザが書くことも出来ます。
 
-
 \end{itembox}
 
 \label{sec:list}
@@ -771,7 +848,6 @@ fun plus x = x + x;
 \subsection{リストの基本}
 リストはImmutableなデータ構造で、データの列を扱うときに
 関数型プログラミングでは良く用いられる重要なデータ構造です。
-
 リストは今までの型とは少し異なり、listだけでは型を表しません。
 型の一部をパラメータ化しており、
 \lstinline{int list}や\lstinline{string list}など、「何かのリスト」であることを型の上で表現します。
@@ -837,7 +913,6 @@ val文などのパターンが書ける部分でパターンマッチが出来�
 そのためにcase式を用います。
 case式は\lstinline{case パターンマッチする式 of パターン１ => 式１ | パターン２ => 式２ ...}
 のように使います。
-
 例を見てみましょう。ソースコード\ref{code:case}を見て下さい。
 
 \begin{lstlisting}[caption=case式,label=code:case]
@@ -861,7 +936,6 @@ case式は\lstinline{case パターンマッチする式 of パターン１ => �
 
 前半部分ではcases式を評価しています。
 このcase式はリストが空の時、要素が１だけの時、要素が２つだけの時、それ以上の時で分岐しています。
-
 次の関数\lstinline{sum}では、仮引数\lstinline{l}が空リストかそうでないかで分岐しています。
 これはリスト操作をする関数では典型的なパターンです。
 
@@ -907,10 +981,9 @@ case式は\lstinline{case パターンマッチする式 of パターン１ => �
 \end{lstlisting}
 
 上の書き方では、引数部分に直接定数（この場合空リスト）を書いています。実は定数は一種のパターンです。
-定数パターン空リストの時は食うリストを返し、そうでなければその下の行の処理を行います。
-
+定数パターン空リストの時は空リストを返し、そうでなければその下の行の処理を行います。
 ソースコード\ref{code:rev1}と\ref{code:rev2}は挙動は全く一緒なので、好みで使い分けて下さい。
-この文章では一貫してあとで導入した記法は使わず、case式を用います。
+この文章でも書きやすい方を選んでその都度違うスタイルを取ります。
 
 次に関数\lstinline{map}を定義してみましょう。
 \lstinline{map}関数は関数をひとつ受け取り、それを更に受け取ったリストのすべての要素に適用する関数です。
@@ -945,11 +1018,8 @@ case式は\lstinline{case パターンマッチする式 of パターン１ => �
 これから\lstinline{'b}型の値を手に入れるには、リストの要素に\lstinline{f}を適用するしか方法がありません。
 それでいて名前が\lstinline{map}です。名前と型で動作が予想できることが分かっていただけたと思います。
 
-\vspace{0.3cm} % TODO: もっといい方法ない？
-
 ここでわざわざ関数\lstinline{map}に渡すためだけに関数\lstinline{add1}を定義するのは
 面倒です。その場で関数がささっと書ける方法があると便利そうです。
-
 名前のない関数である「匿名関数(Anonymous function)」は、
 \lstinline{fun パターン => 式}という形で書くことが出来ます。
 これも他の関数同様第一級です。
@@ -963,16 +1033,17 @@ case式は\lstinline{case パターンマッチする式 of パターン１ => �
 \end{lstlisting}
 
 匿名関数としてカリー化されている、複数引数を受け取る関数を作るには
-\lstinline{fn x => fn y => ...}のように書く必要ががります。
-
+\lstinline{fn x => fn y => ...}のように書く必要があります。
+また匿名関数を使う例は次の節にたくさん現れますので確認してみて下さい。
 % TODO: カリーかをどこに書く？
 
 \subsection{Listモジュール}
 
 最後にSML/NJが提供する標準ライブラリのListモジュールに含まれる関数を見ていきます。
+テーブル\ref{fig:list-table}を見て下さい。
 全ての関数は取り上げないので、詳しくはリファレンスを見て下さい\cite{sml-libs}。
 
-\begin{table}[htb]
+\begin{table}[htbp]
   \begin{tabular}{|c|c|l|}
 \hline
 関数名 & 型 & 説明 \\ \hline \hline
@@ -996,6 +1067,8 @@ exists & ('a -> bool) -> 'a list -> bool                   & 述語fがtrueに�
 all & ('a -> bool) -> 'a list -> bool                      & すべての要素が述語fを満たすか\\ \hline
 tabulate & int * (int -> 'a) -> 'a list                    & 0からn-1を関数fを適用した結果を返す\\ \hline
   \end{tabular}
+  \caption{Listモジュールの主な関数}
+  \label{fig:list-table}
 \end{table}
 
 リストは本当によく使うので、Listモジュールに含まれる関数はほぼすべて覚えるくらいに勢いで
@@ -1021,44 +1094,468 @@ tabulate & int * (int -> 'a) -> 'a list                    & 0からn-1を関数
 
 - fun capitalize str =
     let
-      val chars = String.explode str (* String.explode: string -> char list *)
-      val capitalized = List.map Char.toUpper chars (* Char.toUpper: char -> char *)
+      (* String.explode: string -> char list を使う *)
+      val chars = String.explode str
+
+      (* Char.toUpper: char -> char を使う *)
+      val capitalized = List.map Char.toUpper chars
     in
-      String.implode capitalized (* String.implode: char list -> string *)
+      (* String.implode: char list -> string *)
+      String.implode capitalized
     end;
 @/val capitalize = fn : string -> string/@
 - capitalize "ryoko, hikaru, izumi";
 @/val it = "RYOKO, HIKARU, IZUMI" : string/@
 \end{lstlisting}
 
+\begin{itembox}[l]{コラム：ドキュメントとしての型}
+テーブル\ref{fig:list-table} を見てると、型がドキュメントとして有効に働いていると分かります。
+例えば\lstinline{List.partition}の型は\lstinline{('a -> bool) -> 'a list -> 'a list * 'a list}
+ですが、これと名前をを見れば、述語を受け取って、述語がtrueになる要素とfalseになる
+要素を２つに分ける関数だということが分かります。
+
+多くのML系言語はマイナーなので、あまりライブラリのドキュメントが整っていません。
+そのため関数の名前とその型が最大にして唯一のドキュメントであることはままあります。
+そのためユーザは強くあらねばなりません……。そこはいいところでもあり、悪いところでもあるのだと思います。
+\end{itembox}
 
 \section{レコード}
-TODO:
-構造の作り方・壊し方（fun文・case文でのパターンマッチ）
+\label{sec:record}
+構造体のような、複数の要素をまとめる方法をこの章では学びましょう。
+タプルは複数の値を１つにまとめる手段として既に登場しましたが、
+アクセスするときに順番（例えば(a, b, c)という形でパターンマッチするならaは１番目）
+でそれぞれの要素を区別していました。
+これは、たくさんの種類の構造が入り乱れるときには不便です。
+構造体の要素にアクセスするときのような、意味のある名前でアクセスしたいですよね。
+ここではなぜ構造を作ると便利なのかという議論は、他の言語と同様なのでしません。
+SMLのレコードの特徴・使い方のみに注目します。\\
+早速例を見てみましょう。ソースコード\ref{code:record}を見て下さい。
+
+\begin{lstlisting}[caption=レコードの例,label=code:record]
+(* レコードを作る *)
+- val r = {x=1, y=3.14};
+@/val r = {x=1,y=3.14} : {x:int, y:real}/@
+
+(* #フィールド名 を用いた、フィールドアクセス関数による要素取り出し *)
+- #x r;
+@/val it = 1 : int/@
+
+(* パターンマッチによる要素取り出し、asパターンも使える *)
+- val r' as {x=num, y=float} = r;
+@/val r' = {x=1,y=3.14} : {x:int, y:real}/@
+@/val num = 1 : int/@
+@/val float = 3.14 : real/@
+
+(* フィールドxの要素のみ取り出す時にワイルドカードパターンが使える *)
+- val {x=num,...} = r;
+@/val num = 1 : int/@
+
+(* round: real -> int は四捨五入してintにキャストする関数 *)
+- fun plus {x=num,y=float} = num + round float;
+@/val plus = fn : {x:int, y:real} -> int/@
+- plus r
+@/val it = 4 : int/@
+\end{lstlisting}
+
+レコードは\{フィールド名１=式, フィールド名２=式, \ ...\}という形で書かれます。
+レコードから要素を取り出す方法は主に２つです。
+１つは\lstinline{#フィールド名 レコード}という形でフィールドアクセス関数を経由して取り出す方法があり、
+もうひとつはval文・fun文におけるパターンマッチによる要素取り出しがあります。
+パターンマッチで取り出す際は、
+パターンには\{フィールド名１＝束縛する変数名, フィールド名２＝束縛する変数名, \ ...\}という風に書かれます。\\
+複数の要素があるレコードから一部のフィールド名の要素を取り出す時、
+\lstinline{...}(ワイルドカードパターン)を使うことが出来ます。
+例えば上の例のようにx、yのフィールドが存在するレコードに対して、
+フィールドxの要素のみを取り出す時、\lstinline|{x=num,...}|と書いて他のフィールドを省略できます。
+
+レコード型の型はソースコード\ref{code:record}の\lstinline{plus}関数のように、
+\{フィールド名１:型１,フィールド名２:型２,\ ...\}という形です。これは直感的に分かりやすいと思います。
+型・レコードの束縛・パターンマッチにおいて、フィールドの順番はどんな順番でも構いません。
+
+もしフィールド名＝束縛する変数名ならば、イコール以降は省略することが出来ます。
+ソースコード\ref{code:omit-variables}を見て下さい。
+
+\begin{lstlisting}[caption=レコードのパターンマッチ時の変数名の省略,label=code:omit-variables]
+- fun plus {x, y} = x + round y;
+@/val plus = fn : {x:int, y:real} -> int/@
+\end{lstlisting}
+
+SMLにおいてレコードは特に宣言もなく使えますが、これの扱いは気をつける点があります。
+それはレコードの型は、すべてのフィールド名が明らかになっていなければならないことです。
+例を見てみましょう。ソースコード\ref{code:unresolved-record}を見て下さい。\\
+関数\lstinline{plus'}はレコード\lstinline{r}を受け取り、
+フィールドアクセス関数\lstinline{#x}と\lstinline{#y}を用いて要素を取り出し
+ソースコード\ref{code:record}の\lstinline{plus}関数と同じく\lstinline{y}をキャストしてから
+\lstinline{x}と加算しています。しかしこれはコンパイルが通りません。
+これはフィールド\lstinline{x}, \lstinline{y}がレコード\lstinline{r}に含まれることは分かるけども、
+それ以外のフィールドが\lstinline{r}に存在するかもしれず\lstinline{r}の型を確定できないからです。\\
+このコードままコンパイルを通すためには型注釈を書けば良いです。\lstinline{plus''}を見て下さい。
+関数\lstinline{idX}はレコードを受け取り、その中に含まれるフィールド\lstinline{x}の要素を返す関数です。
+これも関数\lstinline{plus'}と同じ理由でコンパイルが通りません。
+\lstinline{idX'}の定義のように、フィールド名をすべて列挙すれば型が決まるためコンパイルできます。\\
+また、\lstinline{#}から始まるフィールドアクセス関数はれっきとした関数で、他の式と組み合わせることが出来ます。
+あまり困ることはないと思いますが、\lstinline{#x}のようにそれ単体で評価しても型が決まりません。
+文脈で決まる場合は大丈夫ですが、そうでない場合はレコードやアクセス関数に型注釈を書けば通ります。
+
+\begin{lstlisting}[caption=フィールド名が解決出来ない例,label=code:unresolved-record]
+- fun plus' r = #x r + round (#y r);
+@/stdIn:25.1-25.34 Error: unresolved flex record (need to know the names of ALL the fields
+ in this context)/@
+@/  type: {x:int, y:real; 'Z}/@
+
+(* rの型を書けば通る *)
+-fun plus'' (r: {x:int,y:real}) = #x r + round (#y r);
+@/val plus'' = fn : {x:int, y:real} -> int/@
+
+- fun idX {x,...} = x;
+@/stdIn:1.2-10.5 Error: unresolved flex record/@
+@/   (can't tell what fields there are besides #x)/@
+
+(* フィールド名をすべて列挙すれば型が決まる *)
+- fun idX' {x, y, z} = x;
+@/val idX' = fn : {x:'a, y:'b, z:'c} -> 'a/@
+
+- #x;
+@/stdIn:28.1-28.3 Error: unresolved flex record/@
+@/   (can't tell what fields there are besides #x)/@
+- #x : {x:'a, y:'b} -> 'a;;
+@/val it = fn : {x:'a, y:'b} -> 'a/@
+\end{lstlisting}
+
+最後に、タプルはレコードの表現のシンタックスシュガーであることを紹介します。
+タプルは、レコードのフィールド名が1,2,...と整数で表されたただのレコードです。
+そのため、フィールドアクセス関数を利用できます。
+例えばタプルの第一要素を取り出したければ\lstinline{#1}を用いればいいわけです。
+
+\begin{lstlisting}[caption=タプルはレコード,label=code:tuple-is-record]
+- {1="hoge", 2="null"};;
+@/val it = ("hoge","null") : string * string/@
+
+- #1 ("hoge", "null);
+@/val it = "hoge" : string/@
+\end{lstlisting}
+
+\begin{itembox}[l]{コラム：多相レコード}
+  \ref{sec:record}章で挙げた問題は、私はコードを書いていると非常に不便に感じます。
+  これを解決する方法は主に２つあります。\\
+  一つはレコードを自由に使えることを放棄することです。
+  ML系言語のOCaml\cite{ocaml}では、レコードは必ず宣言してから使います。
+  そしてレコードの要素へのアクセスのためのアクセス関数は存在せず、レコードアクセスのために
+  ドット記号を用いて「レコード.フィールド名」のように書きます。
+  フィールド名は、すべてレコード型を利用する前にすべて宣言されているおかげで
+  フィールド名を見ればどのレコード型のフィールド名なのか区別がつきます。\\
+  例を見てみましょう。ソースコード\ref{code:ocaml-record}を見て下さい。
+
+\begin{lstlisting}[caption=OCamlにおけるレコード,label=code:ocaml-record]
+(* レコードは予め宣言する *)
+type t1 = {x:int; y:float};;
+
+(* ドット(.)でレコードのフィールドへアクセス
+   OCamlではletで関数も変数も宣言する
+*)
+let plus r = r.x + int_of_float r.y;;
+@/# val plus : t1 -> int = <fun>/@
+\end{lstlisting}
+
+  この方式では複数のレコード型で同じフィールド名を使いまわすことが面倒ですが、
+  私見ではSMLの方式よりも面倒な事を防ぐことが出来ると思います。
+
+  もうひとつはSML\#\cite{smlsharp}で実装されている多相レコードです。
+  多相レコードでは、\ref{sec:record}章で議論した「レコード型のフィールドはすべて明らかになっていなければならない」
+  という制約はなくなり、型が与える情報はレコードが持つべき最低限のフィールドとその型をあたえるものになっています。
+  ソースコード\ref{code:poly-record}では、関数\lstinline{f}の型をみると、
+  「型変数\lstinline{'b}、ただし\lstinline{'b}はレコード型で少なくとも
+  \lstinline{'a}型のフィールド\lstinline{name}は含まれる」という制約を書き下しています。
+
+\begin{lstlisting}[caption=SML\#の多相レコード,label=code:poly-record]
+# fun f x = #name x;
+@/val f = fn : ['a, 'b#{name:'a}. 'b -> 'a]/@
+# f {name = "Joe", age = 21};
+@/val it = "Joe" : string/@
+\end{lstlisting}
+
+  OCamlのオブジェクトも同じような事が出来ます。
+  このあたりの歴史的背景は\cite{smlsharp:bg-of-poly-record}を見て下さい。
+
+\begin{lstlisting}[caption=OCamlのオブジェクト,label=code:ocaml-obj]
+utop[0]> let f x = x # name;;
+@/val f : < name : 'a; .. > -> 'a = <fun>/@
+utop[1]> f (object method name = "joe" method age = 21 end);;
+@/- : bytes = "joe"/@
+\end{lstlisting}
+
+\end{itembox}
 
 \section{ユーザ定義データ型}
 \subsection{ヴァリアントの定義}
-TODO:
-\begin{itemize}
-\item case文で分解する
-\item enumとの比較
-\end{itemize}
+
+今まではレコード・タプルなど複数の値を１つにまとめる方法を学びました。
+ここでは新しく複数の型の値を１種類の型にまとめる、ヴァリアント（コンストラクタとも呼ぶ）の使い方を学びましょう。\\
+早速例を見てみましょう。ソースコード\ref{code:variants}を見て下さい。
 
 \begin{lstlisting}[caption=単純なヴァリアント,label=code:variants]
-datatype inputs = NOTHING | ARG of string | FLAG of string * bool;
-@/datatype inputs = ARG of string | FLAG of string * bool | NOTHING/@
+(* t型を新しくつくる *)
+- datatype t = A of int | B of real | C of string;
+@/datatype t = A of int | B of real | C of string/@
 
-val l = [FLAG ("-c", false), FLAG ("-i", true), ARG "a.ml", ARG "b.ml"];
-@/val l = [FLAG ("-c",false),FLAG ("-i",true),ARG "a.ml",ARG "b.ml"]/@
-@/  : inputs list                                                   /@
+(* t型のリストを作る *)
+- val l = [A 12, B 3.14, C "ruri"];
+@/val l = [A 12,B 3.14,C "ruri"] : t list/@
+
+(* t型の要素をstringに変換する関数を作る *)
+- fun toString t = case t of
+    A i => Int.toString i
+  | B f => Real.toString f
+  | C s => s;
+@/val toString = fn : t -> string/@
+
+(* toStringを使ってみよう *)
+- List.map toString l;
+@/val it = ["12","3.14","ruri"] : string list/@
 \end{lstlisting}
 
-\subsection{再帰データ構造}
-TODO:
-\begin{itemize}
-\item 上の定義の問題[NOTHING, NOTHING]みたいなのがかけることを指摘
-\item リストっぽい構造にする
-\end{itemize}
+この例ではまず\lstinline{datatype}宣言により新しい型\lstinline{t}を作っています。
+これの書き方は「\lstinline{datatype <パラメータ> 型名 = コンストラクタ名１ of 要素の型１ | コンストラクタ名２ of 要素の型２ | ...}」です。\lstinline{<パラメータ>}の部分はオプションで、詳しくはあとで説明します。
+また要素の型がunit型である場合、これを\lstinline{of}以降を省略できます。
+
+\lstinline{t}型の要素を作る方法は「コンストラクタ 要素」と並べるだけです。
+コンストラクタは実は関数なので、ただの関数適用です。
+例えばソースコード\ref{code:variants}では\lstinline{A 12}と並べることで\lstinline{t}型の値を作っています。
+
+次にヴァリアントを分解するためにパターンマッチを用います。
+上の例で\lstinline{toString}関数の定義を見て下さい。
+この定義で、\lstinline{case t of A i => ...}の部分が
+もし引数が\lstinline{A}のケースであった場合の処理です。
+\lstinline{t}が\lstinline{A}のケースの場合、中身を\lstinline{i}と名前をつけて処理を行います
+（リストを扱った時と変わりありません）。
+
+ヴァリアントは、「要素にラベルがついたもの」です。
+これにより複数の異なる型の値を実行時に区別し、安全に混ぜることが出来るようになっています。
+新しく作る型の要素が宣言の時に列挙されているという意味で定義の見た目は似ていても、
+CやJavaのEnumとは扱いが全く異なります。
+
+ヴァリアントはあまりML系言語以外には見られない機能です。
+これができると何故嬉しいのか詳しく見て行きましょう。
+ソースコード\ref{code:option}では、
+標準ライブラリで提供されている\lstinline{option}型を使用しています。
+\lstinline{option}型は\lstinline{list}と同様にそれ単体では型ではなく、
+\lstinline{int option}や\lstinline{string option}などパラメータを持ちます。
+
+\begin{lstlisting}[caption=オプション型,label=code:option]
+(* option型の定義は
+   datatype 'a option = NONE | SOME of 'a *)
+
+- val l = List.tabulate (10, fn x => x + 1);
+@/val l = [1,2,3,4,5,6,7,8,9,10] : int list/@
+
+(* 3で割ってあまりが0になる要素を取り出す *)
+List.find (fn x => x mod 3 = 0) l;
+@/val it = SOME 10 : int option/@
+
+(* 100以上の要素を取り出すが、lには存在しないのでNONEが返ってくる *)
+- List.find (fn x => x >= 100) l;
+@/val it = NONE : int option/@
+\end{lstlisting}
+
+上の例ではまず\lstinline{int list}型の変数\lstinline{l}をつくり、
+\lstinline{List.find: ('a -> bool) -> 'a list -> 'a option}に
+匿名関数とこのリストを渡しています。
+\lstinline{'a option}型の要素は２つあります。一つは要素が存在しないことを表す\lstinline{NONE}、
+もうひとつは要素が存在することを表す\lstinline{SOME of 'a}です。
+\lstinline{List.find}を使った最初の例では、３で割ってあまりが0になる最初の要素を取り出していますが、
+これはこのような要素が\lstinline{l}に存在するので\lstinline{SOME 3}を返しています。
+一方でその下の例では、100以上の要素を探して取り出していますが、
+そのような要素は存在しないので、存在しなかったことを表すために\lstinline{NONE}が返ってきます。
+
+このように、計算が失敗するかもしれないという事を手軽に、さらに型にもそれを表明することが出来ます。
+プログラマは例えば\lstinline{List.find}の返り値部分を見て\lstinline{'a}ではなく\lstinline{'a option}
+であることを見れば、ああ、この処理というのは失敗する場合もあるんだなということが分かります。
+
+また上の例で\lstinline{int option}型の値を使うためには、必ずパターンマッチによりSOMEのケースとNONE
+のケースを記述しなければなりません。そのため意識的に失敗した時の処理をプログラマは書くことになります。
+これは例外で失敗したことを表す場合のキャッチし忘れのことを考えると、随分安全性に寄与すると考えられます。
+
+対照に、\lstinline{List.hd: 'a list -> 'a}はリストの先頭要素を取り出す関数ですが
+これの返り値は\lstinline{'a option}ではなく\lstinline{'a}です。
+引数に空リストが渡されたらこれは例外を投げるんだなーとなんとなく想像することが出来ます
+（利便性のために\lstinline{'a option}ではなく\lstinline{'a}になっているのだと思います）。
+
+ヴァリアントの嬉しさは複数の型の値を１つにまとめることが出来ることで、
+それはとても小回りがきいて使いやすいということを理解していただけたでしょうか。
+ヴァリアントの嬉しさは次の章でも議論します。
+
+\begin{itembox}[l]{コラム：ヴァリアント無しで失敗をエンコードするには}
+ヴァリアントが存在しない言語ではこのような失敗するかもしれない要素は
+どのように表せるでしょうか？考えられる可能性としては、
+\begin{enumerate}
+\item nullを計算を失敗した時に返す
+\item 例外を計算が失敗した時に投げる
+\item オブジェクトのサブタイピングを用いてSOME, NONEのスーパータイプに該当するようなインターフェースを作り、
+  それを継承する形でSOME, NONEを実装する
+\end{enumerate}
+
+1.のnullを用いる場合だと、コードのあちこちでnullチェックが必要になります。
+これの悲惨さは私よりも職業プログラマの皆様のほうがよくご存知だと思います。
+
+2.の失敗した時に例外を投げることにして、\lstinline{List.find}を例にすると返り値を
+\lstinline{'a option}ではなく\lstinline{'a}にしてしまうのはnullを用いるよりはあり得る設計です。
+しかし、例外の存在はプログラムを危険にします。
+プログラマが例外をキャッチすることを忘れれば、プログラムはキャッチされない例外によって終了してしまいます。
+たくさんテストを書いて例外が発生しないことを確認すればいいかもしれませんが、
+私見ではそもそも例外を投げないような設計にして、
+失敗をオプション型で表現したほうが安全は高まると思います。
+
+3.の同じような解決策はPlayフレームワーク\cite{play}のJavaインターフェースにも実装されています。
+しかし、SMLではオプション型の定義は１行で書けますが、
+Javaのこの実装では冗長なたくさんのコードにより実装されているようです\cite{play-doc-option}。
+もちろんユーザとして利用するだけならパターンマッチできない等の制限はありますが便利に使えると思います。
+\end{itembox}
+
+\subsection{再帰的ヴァリアント型}
+
+コンストラクタの要素として、自分自身と同じ型の要素を持つようなヴァリアント型のことを
+再帰的ヴァリアント型と呼びましょう。これはすでに登場しています。
+リストの定義を考えてみましょう。リストの定義は\lstinline{List}モジュールをオープンしてみると
+プリントされます。\\
+モジュールをオープンする、とはモジュールの関数や変数にはドット記号をつけてアクセスしていましたが、
+モジュール名を省略できるようになります。
+例えば\lstinline{open List;}のあとでは\lstinline{List.find}ではなく\lstinline{find}とかければ
+この関数を指すようになります。
+
+\begin{lstlisting}[caption=リストの定義を確認する,label=code:open-list]
+- open List;
+@/opening List/@
+@/  datatype 'a list = :: of 'a * 'a list | nil/@
+@/  exception Empty/@
+@/  val null : 'a list -> bool/@
+... 以下省略 ...
+- nil;
+@/val it = [] : 'a list/@
+- op ::;
+@/val it = fn : 'a * 'a list -> 'a list/@
+\end{lstlisting}
+
+これを見るとリストは\lstinline{datatype 'a list = :: of 'a * 'a list | nil}
+と定義されていますね。リストというのはコンス(::)の場合と空リストの場合から成り立っています。
+\lstinline{::}の場合の要素の部分を見てみると、
+今\lstinline{'a list}が存在しないから作ろうとしているのに、既に\lstinline{'a list}が存在しているかのように
+これを使っています。再帰の構造をしていますね。\\
+ちなみにconsのケースで要素の型に含まれる型変数が\lstinline{'b}ではなく\lstinline{'a}だということも
+重要な情報です。\lstinline{'a list}の要素の型はすべて\lstinline{'a}型である、
+他の型は含まれないということを表明しているわけです。
+
+最後に応用例として２分探索木を利用した辞書を実装してみましょう。
+ソースコード\ref{code:dict}を見て下さい。ここでは対話環境の応答やプロンプトは省略しています。
+
+\begin{lstlisting}[caption=２分探索木による辞書の実装,label=code:dict]
+(* keyとして文字列でアクセスし、'a型の要素を取り出す辞書の実装
+   破壊的変更はせずに辞書に要素を追加したら、新しい辞書を返すようにする *)
+datatype 'a dict =
+  LEAF
+| NODE of {left: 'a dict, key:string, value: 'a, right: 'a dict}
+
+(* insert: 'a dict -> string -> 'a -> 'a dict *)
+fun insert k v LEAF = NODE {left= LEAF, key= k, value= v, right= LEAF}
+  | insert k v (NODE {left, right, key, value}) =
+    if String.< (k, key)
+    then NODE {left= insert k v left, right=right, key= key, value= value}
+    else NODE {left= left, right= insert k v right, key= key, value= value}
+
+(* find: string -> 'a dict -> 'a option *)
+fun find k LEAF = NONE
+  | find k (NODE {left, right, key, value}) =
+    if k = key then SOME value else
+    if String.< (k, key) then find k left else find k right
+
+(* toString: (string -> 'a -> string) -> 'a dict -> string *)
+fun toString f LEAF = "LEAF"
+  | toString f (NODE {left,right,key,value}) =
+      "(" ^ toString f left ^ ", " ^ f key value ^ ", " ^ toString f right ^ ")"
+
+(* printDict: (string -> 'a -> string) -> 'a dict -> unit *)
+fun printDict f dict = print (toString f dict)
+\end{lstlisting}
+
+% (* printIntDict: int dict -> unit *)
+% fun printIntDict dict =
+%   printDict (fn s => fn e => "<" ^ s ^ ", " ^ Int.toString e ^ ">") dict
+
+気をつける点は多相的なイコールを多用していることです。
+イコールの型付けは特殊で、\lstinline{''a * ''a -> bool}という型を持ちます
+\footnote{ちなみに\lstinline{''a}は特殊な型変数で、浮動小数点数型や関数型に単一化できない型変数です。
+浮動小数点数の等しさの判定はしちゃいけないし、関数同士の比較は普通は出来ませんよね。}。
+色々な型に対して等しいかどうかを判定できる、ユーザが書けない関数です。
+
+\begin{lstlisting}[caption=イコールを乱用する,label=code:equal]
+- (1, 2) = (3, 4);
+@/val it = false : bool/@
+- {x=12, y=13} = {x=12, y=13};
+@/val it = true : bool/@
+
+(* 参照の場合はアドレスが等しいかどうかのチェック（後の章参照）*)
+- ref 0 = ref 0;
+@/val it = false : bool/@
+\end{lstlisting}
+
+また\lstinline{string}型の比較を行う\lstinline{String.<}を利用しています。
+これはinfix宣言されてないので普通の関数と同じスタイルで関数適用しています。
+また、一部対話環境がネストが深かったりデータが長すぎて省略している部分がありますね。
+
+\begin{lstlisting}[caption=dict型の利用,label=code:use-dict]
+(* パイプライン演算子 次のヒントコラム参照 *)
+- fun op |> (x, f) = f x;
+@/val |> = fn : 'a * ('a -> 'b) -> 'b/@
+- infix 1 |>
+@/infix 1 |>/@
+
+- val dic = insert "hibiki" 1 LEAF
+            |> insert "sakimori" 2
+            |> insert "kanade" 3
+            |> insert "chris" 4
+            |> insert "shirabe" 5
+            |> insert "maria" 6;
+@/  NODE /@
+@/    {key="hibiki",left=NODE {key="chris",left=LEAF,right=LEAF,value=4},/@
+@/     right=NODE {key="sakimori",left=NODE #,right=NODE #,value=2},value=1}/@
+@/  : int dict/@
+
+- find "chris" dic;
+@/val it = SOME 4 : int option/@
+
+- find "sugita" dic;
+@/val it = NONE : int option/@
+\end{lstlisting}
+
+\begin{itembox}[l]{ヒント：パイプライン演算子}
+ソースコード\ref{code:use-dict}でパイプライン演算子を定義して使用しました。
+これは関数なのですが一種の制御構造みたいな役割を果たす、多用される演算子なので紹介します。
+
+\lstinline{fun op |> (x, f) = f x}がパイプライン演算子\lstinline{|>}の定義です。
+次の行のinfix宣言により中置演算子として扱われます（結合の強さは弱い１を選びました）。
+これでパイプライン演算子がどのように働くのかというと、例えば
+\lstinline{x |> f |> g |> h}というコードは\lstinline{h (g (f x))}というコードと
+同じ挙動をします。\\
+どちらが見やすいでしょうか？もちろん場合によりますが、
+パイプライン演算子を使うと読みやすくなる場合というのはたくさんあります。
+まさにソースコード\ref{code:use-dict}で\lstinline{insert}がたくさん並んでいる部分がそうです！\\
+パイプライン演算子が並んでいる部分は、
+計算した結果を次のパイプラインの末尾の部分に渡して処理して、それをさらに次のパイプラインに
+渡していく、と理解することが出来ます。下の２つのソースコードはどちらが読みやすいでしょうか？
+
+\begin{lstlisting}
+insert "hibiki" 1 LEAF
+|> insert "sakimori" 2
+|> insert "kanade" 3
+...
+\end{lstlisting}
+
+\begin{lstlisting}
+... insert "kanade" 3 (insert "sakimori" 2  (insert "hibiki" 1 LEAF)) ...
+\end{lstlisting}
+
+\end{itembox}
+
+
 
 \begin{itembox}[l]{コラム：多相ヴァリアント}
   TODO:
@@ -1094,6 +1591,17 @@ OCamlで多相ヴァリアントを説明
     \url{http://sml-family.org/Basis/index.html}
   \bibitem{smlsharp} 東北大学電気通信研究所 大堀研究室, ``SML＃プロジェクト''\\
     \url{http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/}
+  \bibitem{SML-KIT} Nick Rothwell, ``Parsing in the SML Kit'' \\
+    \url{http://www.lfcs.inf.ed.ac.uk/reports/92/ECS-LFCS-92-236/ECS-LFCS-92-236.ps}
+  \bibitem{smlsharp:bg-of-poly-record} 大堀淳, ``レコード多相性の理論''
+    \url{http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/?Foundations%2F010}
+  \bibitem{ocaml} ``ocaml''
+    \url{http://ocaml.org/}
+  \bibitem{play} ``Play''
+    \url{https://www.playframework.com/}
+  \bibitem{play-doc-option} ``play.libs Class F.Option<T>''
+    \url{https://www.playframework.com/documentation/2.0/api/java/play/libs/F.Option.html}
+;;
 \end{thebibliography}
 
 
