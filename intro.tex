@@ -24,7 +24,7 @@
 \lstdefinelanguage{SML} {
   keywords = {
     if,then,else,val,rec,let,in,end,fun,fn,exception,handle,raise,
-    case,of,datatype,type,op,
+    case,of,datatype,type,op,where,
     ref,struct,structure,signature,sig,functor,before,local,as,
     SOME,NONE
   },
@@ -159,6 +159,8 @@ SMLでは（関数宣言・型宣言などの宣言は除いて）全ての要�
 SMLに限らず一般に関数型言語では式を組み合わせてプログラミングしていきます。
 以後、式と文は明確に区別されているので気をつけて下さい。
 
+TODO: 値とはなにか書く
+
 同様にif文もCの三項演算子のように値を返します。
 if文のelse節は省略できません。
 if文の構文は\lstinline{if 式1 then 式2 else 式3}（ただし式1の型はbool, 式2の型=式3の型）です。
@@ -179,7 +181,7 @@ if文の構文は\lstinline{if 式1 then 式2 else 式3}（ただし式1の型�
 \label{sec:static-typing}
 
 SMLではプログラムは静的に（コンパイル時に）型付けされます。
-動的型付け(実行時に型の整合性を確認する)言語などと異なり型が合わないものはこの時エラーになります。
+動的型付け(実行時に型の整合性を確認する)言語と異なり、型が合わないものはこの時エラーになります。
 静的型付けを行う言語の例として、CやJavaを思い浮かべると
 変数を宣言するたびに冗長な型を書かなくてはいけない、いちいち変更するのに面倒
 というイメージがあるかもしれません。\\
@@ -188,7 +190,7 @@ SMLには「型推論」と呼ばれる、型をプログラマが書かなく�
 そのためソースコード\ref{code:if-statement}でも一切型を書かなくても
 返り値は\lstinline{int}だな、と判断してくれました。
 
-さて、型エラーになる例を少し見てみましょう。ソースコード\ref{code:type-error1}を見て下さい。\\
+さて、型エラーになる例を見てみましょう。ソースコード\ref{code:type-error1}を見て下さい。\\
 最初の例では\lstinline{int}型の値と\lstinline{real}型（CのDoubleのこと）の値を加算しようとして型エラーになりました。C言語などでは暗黙のキャストにより型検査に成功しますが、SMLではこのような仕組みは存在せず自分でキャスト関数を挿入する必要があります。
 これは書くのには面倒ですが、プログラムを安全にします。
 \footnote{暗黙のキャストはプログラムを危険にします。例えば浮動小数点数演算の精度・ポインタのキャストなどがプログラマの意識外で行われてしまいます。}\\
@@ -220,7 +222,7 @@ SMLのif文は、then節・else節で同じ型の値を返さなければなり�
 
 関数適用の書式ですが 「関数名 引数1 引数2 ...」というような記法で書きます。
 C言語で関数適用を書くのとは違いカッコが必要ありません。
-\lstinline{print("12")}と書いてもエラーではありませんがMLらしいスタイルではありません。
+\lstinline{print("12")}と書いてもエラーではありませんがMLらしく
 省略できるカッコは省略していきましょう。
 
 さて、\lstinline{int}型の値である12をプリントしようとしていますが、
@@ -269,26 +271,27 @@ C言語で関数適用を書くのとは違いカッコが必要ありません�
 \end{lstlisting}
 
 val文は\lstinline{val 変数名 = 式}という形で書かれます。
-注意すべきなのは、デフォルトで変数はimmutable(変更不可能)であることです。
+注意すべきなのは、デフォルトで変数はイミュータブル(変更不可能)であることです。
 そのため一度定義した値が変わらないことをコンパイルが保証してくれるのでプログラムを安全に開発することができます！
-これはC・Javaなどの言語を書いている人には違和感があるかもしれませんが、
+これはデフォルトがイミュータブルでない言語を書いている人には違和感があるかもしれませんが、
 ''Effective Java''などでもImmutable objectsはプログラムをシンプルにする・デフォルトでスレッドセーフである、
 など沢山の利点があることが主張されています。
-興味があればEffective Javaや\cite{objects-should-be-immutable}を読んでみてください。
+興味があればEffective JavaやYegor Bugayenkoの``Objects Should Be Immutable''
+\footnote{\url{http://www.yegor256.com/2014/06/09/objects-should-be-immutable.html}}
+を読んでみてください。
 
 さて、ソースコード\ref{code:vals}の最後の例で新しい型、タプルが現れました。
-タプルというのは組み型と呼ばれで、複数の型の異なる要素をまとめた構造を作ることができます。
+タプルというのは組み型と呼ばれ、複数の型の異なる要素をまとめた構造を作ることができます。
 例えば\lstinline{int}と\lstinline{real}型の値を１つにしているときには、
 \lstinline{int * real}のようにこの型は表現されます。タプルの要素は任意の型の要素が許されるので、
 \lstinline{int * (int * real)}などとタプルがネストすることも考えられます。
 
 さて、タプルを作る方法はただ\lstinline{(1, "2")}などと書くだけです。
-論理学などをやっている方はお分かりになると思いますが、導入規則には対で除去規則を導入しなければならないですよね？
 作り方がわかったところで、この構造を破壊する方法を学びましょう。
 
 その前に、スコープの話をしましょう。ソースコード\ref{code:vals}を見て下さい。
 SMLではレキシカルスコープを採用しています。
-また一度参照したものの参照先が変わることはありません。
+そのため一度参照したものの参照先が変わることはありません。
 
 \begin{lstlisting}[caption=valのスコープ,label=code:vals]
 - val name = "nadesico";
@@ -326,9 +329,9 @@ SMLではレキシカルスコープを採用しています。
 @/val c = "alice" : string/@
 \end{lstlisting}
 
-さて、上の例ではまずタプル\lstinline{t1}を定義し、それをパターンマッチによって分解し中身の要素を取り出しました。
+さて、上の例ではまずタプル\lstinline{t1}を定義し、それをパターンマッチによって中身の要素を取り出しました。
 val文には\lstinline{val 変数名 = 式}という形以外に\lstinline{val パターン = 式}という形を書くことが出来ます。
-むしろvalのあとに来るものが変数名だけのケースは単純なパターンの１つで、「val パターン = 式」と覚えるのがより一般的です。
+むしろvalのあとに来るものが変数名だけのケースは単純なパターンで、「val パターン = 式」と覚えるのがより一般的です。
 \lstinline{val (a,b,c) = t1}と書いた時、\lstinline{t1}の第一要素が\lstinline{a}に束縛・
 第二要素が\lstinline{b}に束縛・第三要素が\lstinline{c}に束縛されます。
 
@@ -357,6 +360,10 @@ val文には\lstinline{val 変数名 = 式}という形以外に\lstinline{val �
 
 上の例ではval文の左辺のパターンは２つの要素を受け取る形をしていますが、右辺の式の部分は３つの要素を持つタプルです。エラーメッセージでもパターンと式（expression）がミスマッチだと言っていますよね。
 
+また、データの一部を名前を付ける必要がないときには、
+\lstinline{val (_, x) = (1, 2)}のように
+ワイルドカード(\lstinline{_})を使用できます。
+
 \begin{itembox}[l]{コラム：どんなパターンが存在するの}
   パターンは以下のBNFで表されます。慣れが必要ですがぜひ読んでみてください。
   \lstinline{<>}でくくられたものはオプション（省略可能）です。
@@ -366,7 +373,8 @@ pat :=    atpat                       % 単純な場合（アトミックパタ�
         | pat vid pat                 % ヴァリアントの中置形式
         | pat : ty                    % 型注釈付き
         | <op> pat <:ty> as pat       % asパターン
-atpat :=  sconst                      % 定数
+atpat :=  ...                         % ワイルドカード
+        | sconst                      % 定数
         | <op> longvid                % 変数
         | {<patrow>}                  % レコード
         | ()                          % unit定数
@@ -384,7 +392,7 @@ ty      % 型
 
 これを見て重箱の隅をつついてみましょう :)。まず定数はパターンです！
 \lstinline{val 1 = 2}みたいな定数パターンのパターンマッチで、正しいコードです。
-（パターンマッチに失敗したと言って実行時エラーになります）。
+（ただし実行時エラーになります）。
 
 ヴァリアントを中置演算子にした形はパターンマッチすることが許されるので、
 \begin{lstlisting}[caption=中置形式のヴァリアントのパターンマッチ]
@@ -401,10 +409,9 @@ val x A y = ...
 - datatype t = A of t list * int | B;
 - infix A;
 
-- val a as ([x, y A z, B : t] A 2, {r1,...}) = ([B, [] A 1, B] A 2, {r1=1,r2="fuga",r3=[]});
+- val a as ([x, y A _, B : t] A 2, {r1,...}) = ([B, [] A 1, B] A 2, {r1=1,r2="fuga",r3=[]});
 /@val x = B : t      @/
 /@val y = [] : t list@/
-/@val z = 1 : int    @/
 /@val r1 = 1 : int   @/
 
 \end{lstlisting}
@@ -812,7 +819,7 @@ val it = 120 : int
 なぜならプラス演算子はreal型にも使えるはずなので、より一般的な型がついてもいいはずです。
 
 これはSMLの型システムに由来します。
-SMLの型システムで表せるのは「何でも受け取る'a」もしくは「int、realのような具体型」だけです。
+SMLの型システムで表せるのは「何でも受け取る'a」もしくは「int、realとそれを組み合わせたな具体型」だけです。
 そのため、SMLではプラス演算子にようにアドホックに演算子は多相的になっているものがありますが、
 それを型として表すことが出来ません。
 
@@ -861,9 +868,6 @@ fun plus x = x + x;
 @/val it = ["sml","ocaml","haskell","fsharp"] : string list/@
 - [[(1, 2)],[(3, 4)]];
 @/val it = [[(1,2)],[(3,4)]] : (int * int) list list/@
-
-- [];
-val it = [] : 'a list
 \end{lstlisting}
 
 \lstinline{'a list}の\lstinline{'a}部分が色々な型に変わっていますね。
@@ -886,8 +890,8 @@ val it = [] : 'a list
 
 リストを扱うためにプリミティブな演算子を紹介します。
 \begin{itemize}
-\item \lstinline{::}演算子は、リストの先頭に要素を追加して新しいリストを作る演算子です。
-\item \lstinline{@}演算子は、リスト同士を結合する演算子です。
+\item \lstinline{::} \ 演算子は、リストの先頭に要素を追加して新しいリストを作る演算子です。
+\item \lstinline{@} \ 演算子は、リスト同士を結合する演算子です。
 \end{itemize}
 
 \begin{lstlisting}[caption=リスト操作演算子の型,label=code:list-operators]
@@ -1021,7 +1025,7 @@ case式は\lstinline{case パターンマッチする式 of パターン１ => �
 ここでわざわざ関数\lstinline{map}に渡すためだけに関数\lstinline{add1}を定義するのは
 面倒です。その場で関数がささっと書ける方法があると便利そうです。
 名前のない関数である「匿名関数(Anonymous function)」は、
-\lstinline{fun パターン => 式}という形で書くことが出来ます。
+\lstinline{fn パターン => 式}という形で書くことが出来ます。
 これも他の関数同様第一級です。
 
 \begin{lstlisting}[caption=匿名関数,label=code:anonymous]
@@ -1275,7 +1279,8 @@ let plus r = r.x + int_of_float r.y;;
 \end{lstlisting}
 
   OCamlのオブジェクトも同じような事が出来ます。
-  このあたりの歴史的背景は\cite{smlsharp:bg-of-poly-record}を見て下さい。
+  このあたりの歴史的背景はSML\#プロジェクトの記事  \footnote{\url{http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/?Foundations\%2F010}}
+  を見て下さい。
 
 \begin{lstlisting}[caption=OCamlのオブジェクト,label=code:ocaml-obj]
 utop[0]> let f x = x # name;;
@@ -1405,9 +1410,10 @@ List.find (fn x => x mod 3 = 0) l;
 私見ではそもそも例外を投げないような設計にして、
 失敗をオプション型で表現したほうが安全は高まると思います。
 
-3.の同じような解決策はPlayフレームワーク\cite{play}のJavaインターフェースにも実装されています。
+3.の同じような解決策はPlayフレームワークのJavaインターフェースにも実装されています。
 しかし、SMLではオプション型の定義は１行で書けますが、
-Javaのこの実装では冗長なたくさんのコードにより実装されているようです\cite{play-doc-option}。
+Javaのこの実装では冗長なたくさんのコードにより実装されているようです
+\footnote{    \url{https://www.playframework.com/documentation/2.0/api/java/play/libs/F.Option.html}}。
 もちろんユーザとして利用するだけならパターンマッチできない等の制限はありますが便利に使えると思います。
 \end{itembox}
 
@@ -1454,7 +1460,9 @@ datatype 'a dict =
   LEAF
 | NODE of {left: 'a dict, key:string, value: 'a, right: 'a dict}
 
-(* insert: 'a dict -> string -> 'a -> 'a dict *)
+val empty = LEAF
+
+(* insert: string -> 'a -> 'a dict -> 'a dict *)
 fun insert k v LEAF = NODE {left= LEAF, key= k, value= v, right= LEAF}
   | insert k v (NODE {left, right, key, value}) =
     if String.< (k, key)
@@ -1497,7 +1505,7 @@ fun printDict f dict = print (toString f dict)
 @/val it = false : bool/@
 \end{lstlisting}
 
-また\lstinline{string}型の比較を行う\lstinline{String.<}を利用しています。
+また\lstinline{string}型の比較を行う\lstinline{String.<}関数を利用しています。
 これはinfix宣言されてないので普通の関数と同じスタイルで関数適用しています。
 また、一部対話環境がネストが深かったりデータが長すぎて省略している部分がありますね。
 
@@ -1532,6 +1540,7 @@ fun printDict f dict = print (toString f dict)
 
 \lstinline{fun op |> (x, f) = f x}がパイプライン演算子\lstinline{|>}の定義です。
 次の行のinfix宣言により中置演算子として扱われます（結合の強さは弱い１を選びました）。
+定義を見ると、ふつう\lstinline{f x}とかかれる関数適用を逆順に書くためのオペレータなのだということが分かります。
 これでパイプライン演算子がどのように働くのかというと、例えば
 \lstinline{x |> f |> g |> h}というコードは\lstinline{h (g (f x))}というコードと
 同じ挙動をします。\\
@@ -1550,7 +1559,8 @@ insert "hibiki" 1 LEAF
 \end{lstlisting}
 
 \begin{lstlisting}
-... insert "kanade" 3 (insert "sakimori" 2  (insert "hibiki" 1 LEAF)) ...
+... (insert "kanade" 3 (insert "sakimori" 2  (insert "hibiki" 1 LEAF))) ...
+(* 更に外側にネストする *)
 \end{lstlisting}
 
 \end{itembox}
@@ -1558,50 +1568,502 @@ insert "hibiki" 1 LEAF
 
 
 \begin{itembox}[l]{コラム：多相ヴァリアント}
-  TODO:
-OCamlで多相ヴァリアントを説明
+
+SMLではヴァリアントはすべて予め宣言されなければ使えませんでした。
+また後で定義を拡張してヴァリアントを増やしたり、コンストラクタの名前を
+他のヴァリアント型のコンストラクタの名前と同じに出来ませんでした。
+% TODO: 上で言及する？
+OCaml\cite{ocaml}には宣言せずに使える、多相ヴァリアントというものがあります。
+多相ヴァリアントは\lstinline{`}が最初につき、大文字で始まります。例を見てみましょう。
+
+\begin{lstlisting}[caption=多相ヴァリアント,label=code:poly-varinat]
+utop[0]> let f x = match x with `A y -> y | `B -> 2 | _ -> 3;;
+@/val f : [> `A of int | `B ] -> int = <fun>/@
+
+utop[25]> let g x = match x with `A y -> y | `B -> 2;;
+@/val g : [< `A of int | `B ] -> int = <fun>/@
+\end{lstlisting}
+
+多相ヴァリアントの型は少し特殊です。まず関数\lstinline{f}の型を見てみると、
+\lstinline{[> `A of int | `B ]}というのは多相ヴァリアントを表す型で、
+
+TODO: 続き書く
+
 \end{itembox}
 
+\section{例外}
+
+
 \section{手続きプログラミング}
+
+ここまでの章では、プリントを除きピュアな（破壊的代入などの副作用がない）要素だけを扱ってきました。
+SMLにおける副作用のある計算を行う仕組みを見て行きましょう。
+他の言事対して変わらないのでさらっといきます。
+
+主にここで出てくるのは、返り値にunit型の値を返す関数や式です。
+unit型はヴァリアントで、値が\lstinline{()}１つしかない型です。
+unit型はC言語のvoid型のように、プリントや破壊的代入など副作用を主に期待していて
+返り値として意味のある返すものがない関数の返り値などになっています。
+型を解釈するときに、返り値がunit型になっていれば
+「これの返り値には意味はなくて、副作用が重要なのだな」と考えられれば素晴らしいです。
+
+\begin{lstlisting}
+- ();
+val it = () : unit
+
+(* 対話環境ではいらないですが、宣言列のなかで副作用だけを
+   起こしたいときには定数パターンを使えう事が出来ます *)
+- val () = print "hello, impure world !\n";
+@/hello, impure world !/@
+\end{lstlisting}
+
+\subsection{逐次実行}
+
+\begin{lstlisting}[caption=逐次実行,label=code:sequence]
+(* 逐次実行は（式１; 式２; ...）*)
+- fun p () = (print "1"; print "2"; print "3"; print "\n");
+@/val p = fn : unit -> unit/@
+- p ();
+@/123/@
+@/val it = () : unit/@
+\end{lstlisting}
+
 \subsection{参照型}
-\subsection{例外}
+
+SMLでは変数は基本的にイミュータブルでした。
+多くの場合、再帰関数などでループ処理を行えばあまり困ることはないのですが、
+効率のために変更できる変数を使いたくなる時があります。
+そのために参照型と呼ばれる型の扱い方を習得しましょう。
+例をみれば使い方がわかると思うので、詳細はソースコード\ref{code:ref}を見て下さい。
+
+\begin{lstlisting}[caption=ref型,label=code:ref]
+(* 参照型を作るのにrefを用いる *)
+- val r = ref 0;
+@/val r = ref 0 : int ref/@
+
+(* 参照型から値を取り出すには!を使う *)
+- op !;
+@/val it = fn : 'a ref -> 'a/@
+
+(* 代入には:=を使う op := : 'a ref * 'a -> unit *)
+- r := !r + 1;
+@/val it = () : unit/@
+
+(* 書き換わってる！ *)
+- !r;
+@/val it = 1 : int/@
+\end{lstlisting}
+
 \subsection{繰り返し}
 
+あまりSMLを書いていると使いたくなる事はないのですが、一応while式が存在します。
+while式はunitを返します。大体は\lstinline{List.app}や\lstinline{List.appi}、
+\lstinline{Array.appi}などで済みます。
+
+\begin{lstlisting}[caption=while式,label=code:while]
+- fun incr r = r := !r + 1;
+@/val incr = fn : int ref -> unit/@
+- let val r = ref 0 in
+    while !r <= 10 do (print (Int.toString (!r)); incr r)
+  end;
+@/012345678910val it = () : unit/@
+
+- let val l = List.tabulate (11, (fn x => x)) in
+  List.app (fn n => print (Int.toString n)) l end
+@/012345678910val it = () : unit/@
+\end{lstlisting}
+
+\subsection{配列}
+
+配列は多相的で\lstinline{'a array}型と表現されます。
+配列を扱うための特別な構文は存在しません。
+すべて関数を通してアクセスやアップデートをします。
+Arrayモジュールの詳細はマニュアルを見ましょう\cite{sml-libs}。
+
+\begin{lstlisting}[caption=配列の扱い,label=code:array]
+(* 関数を使ってint arrayをつくる *)
+- val arr = Array.tabulate (100, (fn x => x + 1));
+@/val arr = [|1,2,3,4,5,6,7,8,9,10,11,12,...|] : int array/@
+
+(* 配列を書き換える *)
+- Array.update (arr, 0, 200);
+@/val it = () : unit/@
+
+(* 配列にアクセスする。たしかに置き換わってますね *)
+- Array.sub (arr, 0);
+@/val it = 200 : int/@
+\end{lstlisting}
+
+\subsection{値制約(value restriction)}
+
+実はSMLおいて多相的な型がつくケースは制限されています。
+% 仕様書4.7節の話
+不拡張な式(Non-expansive expression, 値式と訳している文献もある)と呼ばれる式にだけ多相的な型がつきます。
+それは直感的には、例外・副作用を起こし得ないと明らかに分かる式のことです。
+より具体的には「定数、関数、コンストラクタの適用(refは除く)とそれらの組み合わせだけで作られるデータ構造」
+のことです。
+
+最も値制約の害がある例は関数適用の結果が多相的にならないことが挙げられます。
+
+\begin{lstlisting}[caption=値制約,label=code:value-description]
+(* 上のルールにはコンストラクタでない関数適用の返り値は多相的にならない *)
+- fun id x = x;
+@/val id = fn : 'a -> 'a/@
+
+- id id;
+@/stdIn:3.1-3.6 Warning: type vars not generalized because of/@
+@/   value restriction are instantiated to dummy types (X1,X2,...)/@
+@/val it = fn : ?.X1 -> ?.X1/@
+\end{lstlisting}
+
+副作用のない言語(例えばHaskell)ではこのような制約は必要ありません。
+副作用があるときこの制約が必要な場合を見てみましょう。
+ソースコード\ref{code:need-value-restriction}を見て下さい。
+一行目のコードが多相的になるのは不正なコードで、他の行の型付けは正しいです。
+
+\begin{lstlisting}[caption=値制約が必要なケース(不正なコード、動かない),label=code:need-value-restriction]
+val polyRef : ('a -> 'a) ref = ref (fn x => x)
+val () = polyRef := (fn n => n * n)
+val str = (!polyRef) "This operation is illegal !"
+\end{lstlisting}
+
+\lstinline{polyRef}がもし多相的な型がつくとすると、一度決まった型が変わることはないので、
+当然型変数に\lstinline{int}を代入しても（２行目）\lstinline{string}を代入しても（３行目）問題ないはずです。
+しかし３行目で\lstinline{!polyRef}の中身は\lstinline{int -> int}の関数になっており、
+このコードは不正な動作をしてしまいます。
+
+原因は\lstinline{polyRef}に多相的な型がつくことです。
+またこのような事が起こる事が分かると、関数適用の結果も多相的になってはいけないことが分かります。
+コンストラクタの適用は副作用は起こし得ないので許されていますが関数適用には副作用があるかもしれないため
+それの返り値には多相型をもたせてはいけないのです。
+
+\begin{lstlisting}[caption=関数の例,label=code:value-restricted-function]
+- fun f () = ref NONE;
+@/val f = fn : unit -> 'a option ref/@
+- val r = f ();
+@/stdIn:13.1-13.5 Warning: type vars not generalized because of   /@
+@/   value restriction are instantiated to dummy types (X1,X2,...)/@
+@/val it = ref NONE : ?.X1 option ref                             /@
+\end{lstlisting}
+
+実用的には、例えば\lstinline{val duplicate = List.map (fn x => (x, x)}
+のようなケースで多相的になってほしいにも関わらず多相的にならない場合があります。\
+多くの場合、$\eta$展開と呼ばれる手法で解決できます。この手法は、先程の例ならば
+\lstinline{fun duplicate l = List.map (fn x => (x, x) l}
+と右辺を関数にしてしまうことです
+（fun文はval文のシンタックスシュガーで、
+デシュガーすると\lstinline{val duplicate = fn l => ...}になります）。
+$\eta$展開についてはラムダ計算の用語なので深追いしませんが、多相的にならないと困った時には
+少し表現を変えるだけで多相的な型がつくことが多いということは覚えておいて下さい。
+p
 \begin{itembox}[l]{コラム：手続きとの付き合い方}
+
+ML系言語を書いていると中々手続きとの付き合いというのは切っても切れません。
+せっかく他のピュアな（副作用のない）言語ではなく手軽に副作用を書ける言語を使っているわけですから、
+必要な場面で使わない手はありません。そこで私見ですが手続きとの付き合い方について書いておきます。
+私の方針は以下の通りです。
+
+\begin{enumerate}
+\item 基本的には副作用は使わずにピュアに書く
+\item 副作用で記述が簡潔になる・凄く高速化できる時は積極的に利用する\\
+  ただし、副作用が１つ（または少数）の関数で閉じており、外側からはピュアに見えるようにする
+\item グローバルなテーブルでアルゴリズムが綺麗になるなら使うが、書き込む部分・読み込む部分を少なくする\\
+  基本的にはテーブルはlet式・local文を用いて他からアクセスされないことを保証する
+\end{enumerate}
+
+純粋性(purity)はとても良い性質です。
+入力が同じであれば出力が同じになることが保証され、テストもしやすくなります。
+副作用を用いる時も、ある関数の外側から見ればこの性質が保たれるようにするべきです。
+
+よくプログラムを書いているとグローバルなテーブルを用いて高速化したくなります。
+その場合は書き込み・読み込みが無節操に行われるとデバッグが地獄です。
+その場合スコープを制限する仕組みを用いてテーブルの影響範囲を限定しましょう。
 
 \end{itembox}
 
 \section{モジュール}
-\subsection{ライブラリの利用}
+
+この章では名前空間を区切るためのモジュールシステムについて説明します。
+SMLにはオブジェクト指向プログラミング言語のようなクラスは存在しませんが、
+C++の名前空間のような機能があります。
+違いはモジュールを受け取って新たなモジュールを返す
+ファンクター(Functor)・シグニチャ（モジュールの型のようなもの）による型隠蔽の存在です。
+モジュールシステムに関しては綺麗な理論がないため、
+少し理解しづらい・使いづらい部分があるかもしれません。
+SMLで大規模開発をする上でモジュールの理解は不可欠です。他の言語と比較しながら読んでみて下さい。
+
 \subsection{モジュールの定義}
+
+モジュールの定義は方法は以下のように行うことが出来ます。
+ソースコード\ref{code:module}では対話環境の応答は省略しています。
+
+\begin{lstlisting}[caption=モジュールの定義,label=code:module]
+structure M1 = struct
+  (* トップレベルと同じ定義が書ける *)
+  val pi = 3.14
+  fun id x = x
+  datatype t = A of int | B of real
+  exception Exit
+  structure M2 = struct val pipi = pi * pi end
+end
+
+(* モジュールの要素には モジュール名.変数名 でアクセスする *)
+fun area r = M.pi * r * r
+val l = [M1.A 12, M1.B M.pi]
+
+fun mul [] = 1
+  | mul (x::xs) = if x = 0 then raise M1.Exit else x * mul xs
+
+val r1 = M1.M2.pipi * M1.M2.pipi
+val r2 = let open M1 in M2.pipi end
+
+structure M3 = List (* モジュールのエイリアスも書ける *)
+val l = M3.map M.id [1,2,3]
+\end{lstlisting}
+
+モジュール定義をオープンして定義をトップレベルに展開するためにはopen文を用います。
+\lstinline{val r2 = ...}の部分ではモジュール\lstinline{M}をオープンして
+\lstinline{M.}という記述を省略でるようになります。
+モジュール名が長い場合や、トップレベルに見えているモジュールを上書きする場合に有効です。
+例えば強化標準ライブラリを作る際に、ソースコード\ref{code:case-of-open}のように、
+モジュールを定義しておいて、使う部分でモジュール\lstinline{PoweredStd}をオープンすれば
+既にある\lstinline{List}モジュールを上書きして\lstinline{List}という記述は
+\lstinline{PoweredStd.List}を指すようになります。
+これはプログラムの挙動を一気に変えるときにとても便利です。
+
+\begin{lstlisting}[caption=openの使いドコロ,label=code:case-of-open]
+structure PoweredStd = struct
+  structure List = ...
+  structure Array = ...
+  ...
+end
+\end{lstlisting}
+
 \subsection{シグニチャ}
-\begin{itembox}[l]{コラム：オブジェクトのカプセル化}
-\end{itembox}
-\subsection{ファンクタ}
+
+さてモジュールの型のようなものである、シグニチャの使い方を学びましょう。
+シグニチャの役割は主に２つあります。
+\begin{itemize}
+\item モジュールにシグニチャが要求する変数・関数・型が宣言されていることを強制する
+\item シグニチャに書かれた関数・変数・型以外にはアクセスできなくする
+\end{itemize}
+
+ソースコード\ref{code:dict}で２分探索木を用いた辞書の定義を行いましたが、
+それをモジュール内で定義した時のシグニチャを定義してみましょう。
+ソースコード\ref{code:signature}を見て下さい(\lstinline{'a dict}を\lstinline{'a t}に名前を変えています)。
+
+\begin{lstlisting}[caption=シグニチャの定義,label=code:signature]
+(* シグニチャの定義は signature ID = sig ... end で行う *)
+signature DICT = sig
+  type 'a t
+  val empty : 'a t
+  val insert : string -> 'a -> 'a t -> 'a t
+  val find : string -> 'a t -> 'a option
+  val printDict : (string -> 'a -> string) -> 'a t -> unit
+end
+\end{lstlisting}
+
+シグニチャ宣言の文法は\lstinline{signature モジュール名 = sig 宣言 end}です。
+シグニチャに含まれる変数の宣言には\lstinline{val 変数名 : 型}、
+ヴァリアント型には普通のトップレベルでの定義のように\lstinline{datatype 型名 = 定義}を書き、
+型隠蔽(後述)のためには上の定義のように\lstinline{type <パラメータ> 型名}を宣言します。
+型隠蔽で\lstinline{type}を用いる場合には定義を書かないところに注意して下さい。
+
+\begin{lstlisting}[caption=モジュール\lstinline{Dict}にシグニチャを付ける,label=code:dict-with-sig]
+structure Dict :> DICT = struct
+  datatype 'a t =
+    LEAF
+  | NODE of {left: 'a t, key:string, value: 'a, right: 'a t}
+
+  val empty = LEAF
+
+  fun insert k v LEAF = NODE {left= LEAF, key= k, value= v, right= LEAF}
+    | insert k v (NODE {left, right, key, value}) =
+      if String.< (k, key)
+      then NODE {left= insert k v left, right=right, key= key, value= value}
+      else NODE {left= left, right= insert k v right, key= key, value= value}
+
+  fun find k LEAF = NONE
+    | find k (NODE {left, right, key, value}) =
+      if k = key then SOME value else
+      if String.< (k, key) then find k left else find k right
+
+  fun toString f LEAF = "LEAF"
+    | toString f (NODE {left,right,key,value}) =
+        "(" ^ toString f left ^ ", " ^ f key value ^ ", " ^ toString f right ^ ")"
+
+  fun printDict f dict = print (toString f dict)
+end
+\end{lstlisting}
+
+ソースコード\ref{code:dict-with-sig}では、上で定義したシグニチャ\lstinline{DICT}の制約を
+\lstinline{Dict}モジュールに\lstinline{Dict :> DICT}という記述によって課しています。
+これがなければ何の制約もないただのモジュール定義になります。
+シグニチャ\lstinline{DICT}の\lstinline{'a t}型の宣言を見ると\lstinline{type}を用いており
+定義が書いてないため、これの詳細にアクセスできなくしています。
+またシグニチャ\lstinline{DICT}には関数\lstinline{toString}のことは
+書いてないので、シグニチャ\lstinline{DICT}の制約が課されたモジュール\lstinline{Dict}では
+この関数にアクセスできなくしています。ソースコード\ref{code:use-dict-with-sig}を見て下さい。
+
+ちなみにここでシグニチャ名をすべて大文字で\lstinline{DICT}、モジュール名を\lstinline{Dict}
+としていますが別にこのような名前でなければならない理由はありません。ただ、SML/NJの習慣では
+モジュール名は最初の文字を大文字にして他は小文字、シグニチャ名には全て大文字を用いるようです。
+ただモジュールとシグニチャで関数などの名前は一致してなければなりません。
+
+\begin{lstlisting}[caption=\lstinline{Dict}を使おう,label=code:use-dict-with-sig]
+fun op |> (x, f) = f x
+infix 1 |>
+
+val dict = Dict.insert "wakaba" 1 Dict.empty
+           |> Dict.insert "saikyo-no-method" 2
+           |> Dict.insert "red-dragon" 3
+(* 'a Dict.t 型の実装は型隠蔽により隠されているので中身がプリントされない！ *)
+@/val dict = - : int Dict.t/@
+
+val str = Dict.toString dict
+(* toStringはシグニチャDICTによって隠したのでアクセスできない *)
+@/stdIn:44.11-44.24 Error: unbound variable or constructor: toString in path Dict.toString/@
+\end{lstlisting}
+
+もしモジュール\lstinline{Dict}に\lstinline{printDict}がない時はどうなるでしょうか？
+これの定義を消して対話環境に入力してみると、
+\lstinline{@/stdIn:45.1-67.4 Error: unmatched value specification: printDict/@}
+と表示され、関数\lstinline{printDict}がモジュールの中にないぞ！と怒られてしまいます。
+
+一般にシグニチャによる型の隠蔽はどんどんやるべきです。その理由は
+\begin{itemize}
+\item コードの安全性のため\\
+  \lstinline{'a Dict.t}型の値のヴァリアントに直接触れると
+  ２分探索木になっていない木もユーザが作れてしまいます。
+  このような事を禁止できれば安全性は高まります。
+\item モジュール定義の柔軟性のため\\
+  \lstinline{'a Dict.t}型の定義を非公開にしておけば、
+これの内部実装に依存したコードが書けなくなります。
+あとで内部実装を配列・ハッシュテーブルを用いたより効率の良いものに交換することが容易になります。
+\end{itemize}
+
+ソースコード\ref{code:use-dict-with-sig}を見ると、辞書の実装が２分探索木であることに
+依存している記述はどこにもありません。だとすれば内部の実装が例えばリストでも良いはずです。
+ソースコード\ref{code:list-dict}ではリストを用いた辞書の定義を行いました。
+これもシグニチャ\lstinline{DICT}の誓約を満たします。
+リストの探索ではリストの探索にはリストの長さ\lstinline{n}に対して線形時間かかりますが、
+２分探索木による実装では対数時間で済みます。しかし２分木による実装のほうがコード量も多いし
+大変であれば、まずはリストを使って実装して後で差し替えればいいですよね。
+このようなことが容易に出来ることをシグニチャによる実装の隠蔽により保証できます。
+
+\begin{lstlisting}[caption=リストによる辞書の実装,label=code:list-dict]
+structure Dict2 :> DICT = struct
+  type 'a t = (string * 'a) list
+
+  val empty = []
+  fun insert k v l = (k, v) :: l
+  fun find k l = Option.map (fn (k, v) => v) (List.find (fn (k', v) => k = k') l)
+  fun toString f [] = ""
+    | toString f ((k, v) :: tl) = "(" ^ f k v ^ ") " ^ toString f tl
+  fun printDict f l = (print (toString f l); print "\n")
+end
+\end{lstlisting}
+
+もしシグニチャ制約は課すけども、型情報を一部公開したかったらばwhere type文を用いることが出来ます。
+例えば\lstinline{structure Dict2 :> DICT where type 'a t = (string * 'a) list = ...}
+と書くとここで書いた定義が外部に公開されます。
+
+\subsection{ファンクタ(functor)}
+
+ファンクタは定義（の列）を受け取ってモジュールを返す関数のようなものです。
+例として２分探索木を提供するファンクタを定義してみましょう。
+２分探索木ではその性質上ノードのラベル同士で大小判定出来ないといけません。
+SMLには\lstinline{compare: 'a -> 'a -> bool}の型を持つ関数はイコールしか存在しないため、
+多相的な\lstinline{'a tree}のような型の値は作れませんでした。
+
+そこで、ここでいう\lstinline{'a}に相当する型とそれの大小判定関数を渡してやり、
+渡された型が格納できる２分探索木を扱うモジュールを返すファンタを定義してみましょう。
+ファンタは\lstinline{functor ファンクタ名 (宣言の列) = struct ... end}という構文により定義されます。
+宣言の列としてよく用いられるのは以下のとおりです。
+
+\begin{itemize}
+\item \lstinline{val 変数名 : 型}
+\item \lstinline{type 型名}
+\item \lstinline{datatype 型名 = ...}
+\item \lstinline{structure モジュール名 : シグニチャ名}
+\item \lstinline{exception 例外名 of 型名}
+\end{itemize}
+\begin{lstlisting}[caption=ファンクタの例]
+(* ２分探索木を返すファンタBinTreeの定義 *)
+functor BinTree (type elem val eq : (elem * elem) -> bool val compare : (elem * elem) -> bool) = struct
+  type elem = elem
+  datatype t = LEAF | NODE of {elem: elem, left: t, right: t}
+  fun insert v LEAF = NODE {elem=v, left = LEAF, right = LEAF}
+    | insert v (t as NODE {elem, left, right}) =
+      if eq (v, elem) then t else
+      if compare (v, elem) then NODE {elem=elem, left=left, right=insert v right} else
+      NODE {elem=elem, left=insert v left, right=right}
+  fun mem v LEAF = false
+    | mem v (NODE {elem, left, right}) =
+      if eq (v, elem) then true else
+      if compare (v, elem) then mem v right else mem v left
+end
+
+(* ファンクタを使ってモジュールをつくる *)
+structure StringTree =
+  BinTree(type t = string val eq = (op =) val compare = String.<=)
+
+val tree = let open StringTree in insert "3" LEAF |> insert "1" |> insert "2" end;
+@/val tree =/@
+@/  NODE {elem="3",left=LEAF,right=NODE {elem="1",left=NODE #,right=LEAF}}/@
+@/  : StringTree.tree/@
+
+(StringTree.mem "3" tree, StringTree.mem "4" tree);;
+@/val it = (true,false) : bool * bool/@
+\end{lstlisting}
+
+ここではファンクタが返すモジュール自体の\lstinline{tree}型の実装は隠蔽されていませんが、
+ファンクタがモジュールにもシグニチャの制約を課すことが出来き、型隠蔽を行うことも出来ます。
+
+\begin{minipage}[htb]{0.45\textwidth}
+\begin{lstlisting}[caption=２分木のシグニチャ]
+signature BINTREE = sig
+  type elem
+  type t
+  val insert : elem -> tree -> tree
+  val mem : elem -> tree -> bool
+end
+\end{lstlisting}
+\end{minipage}
+\hfill
+\begin{minipage}[htb]{0.55\textidth}
+\begin{lstlisting}[caption=BinTreeの再定義,label=code:bin-tree-with-sig]
+functor BinTree
+  (type elem
+   val eq : (elem * elem) -> bool
+   val compare : (elem * elem) -> bool)
+  :> BINTREE where type elem=elem = struct
+  ...
+end
+\end{lstlisting}
+\end{minipage}
+
+ソースコード\ref{code:bin-tree-with-sig}では、ファンクタ\lstinline{BinTree}を再定義しています。
+定義は一緒なのですが、増えた部分は\lstinline{:> BINTREE where type elem=elem}の部分です。
+\lstinline{:> BINTREE}はファンクタが返すモジュールのシグニチャ制約で、
+\lstinline{where}以降はシグニチャ制約によって隠す型\lstinline{elem}を公開することを宣言しています。
+where type文がなければ型\lstinline{elem}の実装を隠してしまい、このファンクタが作るモジュールの
+関数の使い道が一切なくなってしまいます。
 
 \begin{itembox}[l]{コラム：第一級モジュール}
 \end{itembox}
 
-\part{プログララムの例}
+\part{プログラムの例}
 
 \begin{thebibliography}{9}
-  \bibitem{objects-should-be-immutable} Yegor Bugayenko, ``Objects Should Be Immutable''\\
-    \url{http://www.yegor256.com/2014/06/09/objects-should-be-immutable.html}
   \bibitem{sml-libs} The Standard ML Basis Library \\
     \url{http://sml-family.org/Basis/index.html}
   \bibitem{smlsharp} 東北大学電気通信研究所 大堀研究室, ``SML＃プロジェクト''\\
     \url{http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/}
   \bibitem{SML-KIT} Nick Rothwell, ``Parsing in the SML Kit'' \\
     \url{http://www.lfcs.inf.ed.ac.uk/reports/92/ECS-LFCS-92-236/ECS-LFCS-92-236.ps}
-  \bibitem{smlsharp:bg-of-poly-record} 大堀淳, ``レコード多相性の理論''
-    \url{http://www.pllab.riec.tohoku.ac.jp/smlsharp/ja/?Foundations%2F010}
   \bibitem{ocaml} ``ocaml''
     \url{http://ocaml.org/}
-  \bibitem{play} ``Play''
-    \url{https://www.playframework.com/}
-  \bibitem{play-doc-option} ``play.libs Class F.Option<T>''
-    \url{https://www.playframework.com/documentation/2.0/api/java/play/libs/F.Option.html}
-;;
 \end{thebibliography}
 
 
