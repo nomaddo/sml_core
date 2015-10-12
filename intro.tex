@@ -73,8 +73,8 @@
 \part{Standard MLの世界へようこそ！}
 Standard ML（以下SML）の世界へようこそ！\\
 SMLは非純粋（副作用、破壊的代入が出来る）な関数型言語の一種です。
-Strictな評価戦略・静的な型付け・高階関数など静的型付けを行う関数型言語として標準的な機能を持つ、
-MLと呼ばれる歴史ある言語ファミリに属しています。\\
+Strictな(Cなどと同じ評価順序)評価戦略・静的な(コンパイル時の)型付け・高階関数(関数を操作する関数)など
+静的型付けを行う関数型言語として標準的な機能を持つ、MLと呼ばれる歴史ある言語ファミリに属しています。\\
 特徴としてはSchemeのように言語の定義が存在します\cite{definition}。
 言語の定義が存在すると、言語を処理系を叩いて理解するのではなく、より定式化されたものを対象に理解することが出来ます。
 
@@ -90,7 +90,7 @@ Whole optimized compilerとして有名な、分割コンパイルを諦めて�
 定理照明器Isabelle/HOLの開発に用いられているPoly/MLなど。
 Type Passingを全面的に利用しようとして夢破れたTILなど、実験的な論文レベルの処理系もたくさんあります。
 
-ぜひこの同人誌を楽しく読むために、SMLのコア言語を短時間でコンパクトに学んで下さい。
+ぜひこの同人誌を楽しく読むために、SMLのコア言語を学んで下さい。
 
 \section{本チュートリアルの読み方}
 このチュートリアルは足早に他のプログラミング言語を何か１つ以上知っている人向けに
@@ -155,11 +155,14 @@ WIndowsを例に見方を説明します。
 
 例えばC言語ではvoidを返す関数の関数適用など、値を返さない式もありますが、
 SMLでは（関数宣言・型宣言などの宣言は除いて）全ての要素は値を返します。
-値を返すものを式と呼びましょう。
+値を返すものを式と呼びましょう。それ以外のものは文または宣言と呼びます。
 SMLに限らず一般に関数型言語では式を組み合わせてプログラミングしていきます。
 以後、式と文は明確に区別されているので気をつけて下さい。
 
-TODO: 値とはなにか書く
+値とは直感的には整数・浮動小数点数・文字列・関数やそれを組み合わせて作った
+データ構造のことです。
+例えば\lstinline{print "Hello, world!"}は値ではなくまだ式です。
+これの計算結果である\lstinline{()}(ユニット)は値です。
 
 同様にif文もCの三項演算子のように値を返します。
 if文のelse節は省略できません。
@@ -331,7 +334,7 @@ SMLではレキシカルスコープを採用しています。
 
 さて、上の例ではまずタプル\lstinline{t1}を定義し、それをパターンマッチによって中身の要素を取り出しました。
 val文には\lstinline{val 変数名 = 式}という形以外に\lstinline{val パターン = 式}という形を書くことが出来ます。
-むしろvalのあとに来るものが変数名だけのケースは単純なパターンで、「val パターン = 式」と覚えるのがより一般的です。
+むしろvalのあとに来るものが変数名だけのケースは単純なパターンで、\lstinline{val パターン = 式}と覚えるのがより一般的です。
 \lstinline{val (a,b,c) = t1}と書いた時、\lstinline{t1}の第一要素が\lstinline{a}に束縛・
 第二要素が\lstinline{b}に束縛・第三要素が\lstinline{c}に束縛されます。
 
@@ -358,7 +361,9 @@ val文には\lstinline{val 変数名 = 式}という形以外に\lstinline{val �
 @/    (a,b) = (1,2,3)             /@
 \end{lstlisting}
 
-上の例ではval文の左辺のパターンは２つの要素を受け取る形をしていますが、右辺の式の部分は３つの要素を持つタプルです。エラーメッセージでもパターンと式（expression）がミスマッチだと言っていますよね。
+上の例ではval文の左辺のパターンは２つの要素を受け取る形をしていますが、
+右辺の式の部分は３つの要素を持つタプルです。
+エラーメッセージでもパターン(pattern)と式（expression）がミスマッチだと言っていますよね。
 
 また、データの一部を名前を付ける必要がないときには、
 \lstinline{val (_, x) = (1, 2)}のように
@@ -604,7 +609,7 @@ infix宣言により中置記法で書くこととなった関数は\lstinline{n
 普通の記法で書かれるように出来ます。
 またinfix宣言は宣言であるため、let式の宣言が並ぶ部分に書くことが出来ます。
 利便性のため一部分でだけで中置記法を用いることが出来るようになります。
-\footnote{つまりSMLではプログラム中で演算子の結合の強さが変わったり中置記法になったりそうでなくなったりするわけです。パーサーがどうなっているのか想像してみて下さい……。SML KitのParsingの論文には''Syntactacally, SML is a nightmare''\cite{SML-KIT}と書かれています。}
+\footnote{つまりSMLではプログラム中で演算子の結合の強さが変わったり中置記法になったりそうでなくなったりするわけです。パーサーがどうなっているのか想像してみて下さい。SML KitのParsingの論文には''Syntactacally, SML is a nightmare''\cite{SML-KIT}と書かれています。}
 
 \subsection{パラメトリック多相性(Parametric Polymorphism)}
 
@@ -719,7 +724,8 @@ $n * fact (n - 1)$も$n$の階乗を計算する式として正しい」
 
 まずはT2が関数型の例から見てみます。
 ソースコード\ref{code:first-order-funs}の上の例では、
-\lstinline{int -> (int -> int)}型の２つ引数を取り、その引数を足すだけの関数\lstinline{plus}を定義しています
+\lstinline{int -> (int -> int)}型の２つ引数を取り、
+その引数を足すだけの関数\lstinline{plus}を定義しています
 （プログラム中の\lstinline{int -> int -> int}はカッコを省略した形式です）。
 この関数に対しても今までの読み方と同じ解釈をすることが出来ます。
 すなわち、関数\lstinline{plus}は\lstinline{int}型の値を１つ受けると\lstinline{int -> int}型の値を返す、
@@ -753,7 +759,7 @@ $f' = \lim_{a \to 0}\frac{f(x+a) - f(x)}{a}$
 でしたね。今回は極限は近似して$a = 0.0000000001$として計算してみます。
 
 \begin{lstlisting}[caption=高階関数の例,label=code:diff]
-- fun diff f x = (f (x + 0.0000000001) - f x) / 0.0000000001;
+- fun diff f x = let val a = 0.0000000001 in (f (x + a) - f x) / a end;
 @/val diff = fn : (real -> real) -> real -> real/@
 
 (* Math.sinはMathモジュールに含まれるsin関数にアクセスする記法 *)
@@ -776,6 +782,7 @@ $f' = \lim_{a \to 0}\frac{f(x+a) - f(x)}{a}$
 出力結果を比べられるようにしました。誤差はあるものの、概ね\lstinline{cos}関数として動作しているように見えますね。
 
 \begin{itembox}[l]{コラム：for文にあたる関数を作る}
+% これいらない？
 高階関数・多相性がある言語ではfor文やwhile文といった、言語組み込みの制御構造を作る構文に相当する
 ものすら関数として表すことが出来ます。まずはfor文を作ってみましょう。
 大域脱出のために例外を用いています。
@@ -816,10 +823,11 @@ val it = 120 : int
 のように型注釈を書く必要があります。
 
 関数\lstinline{plus}に\lstinline{int -> int}型がつくことは少し変です。
-なぜならプラス演算子はreal型にも使えるはずなので、より一般的な型がついてもいいはずです。
+プラス演算子はreal型にも使えるはずなので、より一般的な型がついてもいいはずです。
 
 これはSMLの型システムに由来します。
-SMLの型システムで表せるのは「何でも受け取る'a」もしくは「int、realとそれを組み合わせたな具体型」だけです。
+SMLの型システムで表せるのは「何でも受け取る'a」もしくは
+「int、realなどとそれを組み合わせたな具体型」だけです。
 そのため、SMLではプラス演算子にようにアドホックに演算子は多相的になっているものがありますが、
 それを型として表すことが出来ません。
 
@@ -910,20 +918,17 @@ fun plus x = x + x;
 
 \subsection{case式}
 
-val文などのパターンが書ける部分でパターンマッチが出来ることは既に触れましたが、
+val文などのパターンが書ける部分でパターンマッチが出来ることは既に触れました。
 パターンマッチをしてその結果によって実行結果を分岐する構文があれば
-リスト操作では「入力が空リストかそうでないかで処理を分ける」みたいな事が簡単にかけたら便利そうです。
+リスト操作では「入力が空リストかそうでないかで処理を分ける」みたいな事が簡単に書けるならば便利そうです。
 
 そのためにcase式を用います。
-case式は\lstinline{case パターンマッチする式 of パターン１ => 式１ | パターン２ => 式２ ...}
+case式は\lstinline{case 式 of パターン１ => 式１ | パターン２ => 式２ ...}
 のように使います。
 例を見てみましょう。ソースコード\ref{code:case}を見て下さい。
 
 \begin{lstlisting}[caption=case式,label=code:case]
-- val l = [1,2,3];
-@/val l = [1,2,3] : int list/@
-
-- case l of
+- case [1,2,3] of
     [] => "empty"
   | x :: [] => "one"
   | x :: y :: [] => "two"
@@ -967,7 +972,7 @@ case式は\lstinline{case パターンマッチする式 of パターン１ => �
 
 関数\lstinline{rev}の作り方が正しいことを、また帰納法のような考え方でこれを説明してみましょう。
 \begin{itemize}
-\item ベースケース：入力$l=[]$のとき、空リストは逆順に既にしてある
+\item ベースケース：入力$l=[]$のとき、空リストは空リストの逆順になっている
 \item 入力$l = x \ :: \ xs$のとき、$rev \ xs$は$xs$を正しく逆順にすると仮定する。\\
   この時$rev \ xs$の後ろに$x$を付ければ$l = x \ :: \ xs$を正しく逆順にする
 \end{itemize}
@@ -1026,7 +1031,9 @@ case式は\lstinline{case パターンマッチする式 of パターン１ => �
 面倒です。その場で関数がささっと書ける方法があると便利そうです。
 名前のない関数である「匿名関数(Anonymous function)」は、
 \lstinline{fn パターン => 式}という形で書くことが出来ます。
-これも他の関数同様第一級です。
+これも他の関数同様第一級です
+\footnote{実はfun文は\lstinline{val funName = fn pat1 => pat2 => ...}のシンタックスシュガーです}
+。
 
 \begin{lstlisting}[caption=匿名関数,label=code:anonymous]
 - (fn x => x + 1) 3;
@@ -1046,6 +1053,7 @@ case式は\lstinline{case パターンマッチする式 of パターン１ => �
 最後にSML/NJが提供する標準ライブラリのListモジュールに含まれる関数を見ていきます。
 テーブル\ref{fig:list-table}を見て下さい。
 全ての関数は取り上げないので、詳しくはリファレンスを見て下さい\cite{sml-libs}。
+ちなみに述語とは、\lstinline{bool}型の要素を返す１引数関数のことです。
 
 \begin{table}[htbp]
   \begin{tabular}{|c|c|l|}
@@ -1115,12 +1123,33 @@ tabulate & int * (int -> 'a) -> 'a list                    & 0からn-1を関数
 \begin{itembox}[l]{コラム：ドキュメントとしての型}
 テーブル\ref{fig:list-table} を見てると、型がドキュメントとして有効に働いていると分かります。
 例えば\lstinline{List.partition}の型は\lstinline{('a -> bool) -> 'a list -> 'a list * 'a list}
-ですが、これと名前をを見れば、述語を受け取って、述語がtrueになる要素とfalseになる
+ですが、これと名前を見れば、述語を受け取って、述語がtrueになる要素とfalseになる
 要素を２つに分ける関数だということが分かります。
 
 多くのML系言語はマイナーなので、あまりライブラリのドキュメントが整っていません。
 そのため関数の名前とその型が最大にして唯一のドキュメントであることはままあります。
 そのためユーザは強くあらねばなりません……。そこはいいところでもあり、悪いところでもあるのだと思います。
+\end{itembox}
+
+\begin{itembox}[l]{コラム：foldlとfoldr}
+  \lstinline{List.foldl}は非常にプリミティブなリスト操作関数です。
+  まずは再帰関数でリスト操作を考えるよりも、\lstinline{foldl}で実装できないか考えるべきです。
+  \lstinline{foldl}を使って\lstinline{List}モジュールに含まれる関数を実装してみましょう。
+  なぜ正しく動くのか考えてみることは良い練習問題になります！ぜひ考えてみて下さい！
+\begin{lstlisting}
+- fun foldl f acc [] = acc
+    | foldl f acc (x :: xs) = foldl f (f (x, acc)) xs;
+@/val foldl = fn : ('a * 'b -> 'b) -> 'b -> 'a list -> 'b/@
+
+- fun rev l = foldl (fn (x, acc) => x::acc) [] l;
+@/val rev = fn : 'a list -> 'a list/@
+
+- fun map f l = rev (foldl (fn (x, acc) => f x :: acc) [] l);
+@/val map = fn : ('a -> 'b) -> 'a list -> 'b list/@
+
+- fun forall f l = foldl (fn (x, acc) => f x andalso acc) true l
+@/val forall = fn : ('a -> bool) -> 'a list -> bool/@
+\end{lstlisting}
 \end{itembox}
 
 \section{レコード}
@@ -1133,6 +1162,8 @@ tabulate & int * (int -> 'a) -> 'a list                    & 0からn-1を関数
 構造体の要素にアクセスするときのような、意味のある名前でアクセスしたいですよね。
 ここではなぜ構造を作ると便利なのかという議論は、他の言語と同様なのでしません。
 SMLのレコードの特徴・使い方のみに注目します。\\
+レコードはC言語で言うところの構造体です。
+ただし、宣言した順にフィールドが並んでいるとは限りません。
 早速例を見てみましょう。ソースコード\ref{code:record}を見て下さい。
 
 \begin{lstlisting}[caption=レコードの例,label=code:record]
@@ -1161,7 +1192,7 @@ SMLのレコードの特徴・使い方のみに注目します。\\
 @/val it = 4 : int/@
 \end{lstlisting}
 
-レコードは\{フィールド名１=式, フィールド名２=式, \ ...\}という形で書かれます。
+レコードは\lstinline|{フィールド名１=式, フィールド名２=式, ...}|という形で書かれます。
 レコードから要素を取り出す方法は主に２つです。
 １つは\lstinline{#フィールド名 レコード}という形でフィールドアクセス関数を経由して取り出す方法があり、
 もうひとつはval文・fun文におけるパターンマッチによる要素取り出しがあります。
@@ -1265,8 +1296,10 @@ let plus r = r.x + int_of_float r.y;;
   私見ではSMLの方式よりも面倒な事を防ぐことが出来ると思います。
 
   もうひとつはSML\#\cite{smlsharp}で実装されている多相レコードです。
-  多相レコードでは、\ref{sec:record}章で議論した「レコード型のフィールドはすべて明らかになっていなければならない」
-  という制約はなくなり、型が与える情報はレコードが持つべき最低限のフィールドとその型をあたえるものになっています。
+  多相レコードでは、\ref{sec:record}章で議論した
+ 「レコード型のフィールドはすべて明らかになっていなければならない」
+  という制約はなくなり、
+  型が与える情報はレコードが持つべき最低限のフィールドとその型をあたえるものになっています。
   ソースコード\ref{code:poly-record}では、関数\lstinline{f}の型をみると、
   「型変数\lstinline{'b}、ただし\lstinline{'b}はレコード型で少なくとも
   \lstinline{'a}型のフィールド\lstinline{name}は含まれる」という制約を書き下しています。
@@ -1295,7 +1328,7 @@ utop[1]> f (object method name = "joe" method age = 21 end);;
 \subsection{ヴァリアントの定義}
 
 今まではレコード・タプルなど複数の値を１つにまとめる方法を学びました。
-ここでは新しく複数の型の値を１種類の型にまとめる、ヴァリアント（コンストラクタとも呼ぶ）の使い方を学びましょう。\\
+ここでは新しく複数の型の値を１種類の型にまとめる、ヴァリアントの使い方を学びましょう。\\
 早速例を見てみましょう。ソースコード\ref{code:variants}を見て下さい。
 
 \begin{lstlisting}[caption=単純なヴァリアント,label=code:variants]
@@ -1320,8 +1353,10 @@ utop[1]> f (object method name = "joe" method age = 21 end);;
 \end{lstlisting}
 
 この例ではまず\lstinline{datatype}宣言により新しい型\lstinline{t}を作っています。
-これの書き方は「\lstinline{datatype <パラメータ> 型名 = コンストラクタ名１ of 要素の型１ | コンストラクタ名２ of 要素の型２ | ...}」です。\lstinline{<パラメータ>}の部分はオプションで、詳しくはあとで説明します。
-また要素の型がunit型である場合、これを\lstinline{of}以降を省略できます。
+これの書き方は「\lstinline{datatype <パラメータ> 型名 = コンストラクタ名１ of 要素の型１ | コンストラクタ名２ of 要素の型２ | ...}」です。
+\lstinline{<パラメータ>}の部分はオプションで、\lstinline{list}のように型の一部をパラメータ化するために用います。
+宣言の際に列挙した、ヴァリアントを作るための関数(上の例ではA,B,Cのこと)を「コンストラクタ」と呼びます。
+またヴァリアントの要素の型がunit型である場合、これの\lstinline{of}以降を省略できます。
 
 \lstinline{t}型の要素を作る方法は「コンストラクタ 要素」と並べるだけです。
 コンストラクタは実は関数なので、ただの関数適用です。
@@ -1375,25 +1410,21 @@ List.find (fn x => x mod 3 = 0) l;
 このように、計算が失敗するかもしれないという事を手軽に、さらに型にもそれを表明することが出来ます。
 プログラマは例えば\lstinline{List.find}の返り値部分を見て\lstinline{'a}ではなく\lstinline{'a option}
 であることを見れば、ああ、この処理というのは失敗する場合もあるんだなということが分かります。
-
 また上の例で\lstinline{int option}型の値を使うためには、必ずパターンマッチによりSOMEのケースとNONE
-のケースを記述しなければなりません。そのため意識的に失敗した時の処理をプログラマは書くことになります。
-これは例外で失敗したことを表す場合のキャッチし忘れのことを考えると、随分安全性に寄与すると考えられます。
+のケースを記述しなければなりません。
+ここが重要なのですが、書き漏らしたケースがあれば「コンパイラが警告します」。
+ここが他の失敗をエンコードする手段と全く違うところです。
+失敗の場合のケースを書き漏しを機械がチェック出来るという部分がオプション型の良い部分です。
 
-対照に、\lstinline{List.hd: 'a list -> 'a}はリストの先頭要素を取り出す関数ですが
-これの返り値は\lstinline{'a option}ではなく\lstinline{'a}です。
-引数に空リストが渡されたらこれは例外を投げるんだなーとなんとなく想像することが出来ます
-（利便性のために\lstinline{'a option}ではなく\lstinline{'a}になっているのだと思います）。
-
-ヴァリアントの嬉しさは複数の型の値を１つにまとめることが出来ることで、
-それはとても小回りがきいて使いやすいということを理解していただけたでしょうか。
-ヴァリアントの嬉しさは次の章でも議論します。
+オプション型以外にも、例えば成功した時\lstinline{'a}型の要素を返し、失敗した時\lstinline{'b}型の要素を返す
+\lstinline{('a, 'b) result}型のようなものも考えられます。
+このような構成要素をユーザが作れる、それがヴァリアントの嬉しい部分です。
 
 \begin{itembox}[l]{コラム：ヴァリアント無しで失敗をエンコードするには}
 ヴァリアントが存在しない言語ではこのような失敗するかもしれない要素は
 どのように表せるでしょうか？考えられる可能性としては、
 \begin{enumerate}
-\item nullを計算を失敗した時に返す
+\item nullなど計算に失敗した事を表す特別な定数を返す
 \item 例外を計算が失敗した時に投げる
 \item オブジェクトのサブタイピングを用いてSOME, NONEのスーパータイプに該当するようなインターフェースを作り、
   それを継承する形でSOME, NONEを実装する
@@ -1401,6 +1432,9 @@ List.find (fn x => x mod 3 = 0) l;
 
 1.のnullを用いる場合だと、コードのあちこちでnullチェックが必要になります。
 これの悲惨さは私よりも職業プログラマの皆様のほうがよくご存知だと思います。
+成功すれば自然数を返すから失敗した時に-1を返すコードなんかも見かけますが、
+同様に特別な定数が返ってきたのかプログラマがこれは-1を返すかもしれないから、と意識して覚えておいて
+失敗時の分岐を書かなければなりません。もちろん書き漏らしても静的にチェックできません。
 
 2.の失敗した時に例外を投げることにして、\lstinline{List.find}を例にすると返り値を
 \lstinline{'a option}ではなく\lstinline{'a}にしてしまうのはnullを用いるよりはあり得る設計です。
@@ -1413,7 +1447,7 @@ List.find (fn x => x mod 3 = 0) l;
 3.の同じような解決策はPlayフレームワークのJavaインターフェースにも実装されています。
 しかし、SMLではオプション型の定義は１行で書けますが、
 Javaのこの実装では冗長なたくさんのコードにより実装されているようです
-\footnote{    \url{https://www.playframework.com/documentation/2.0/api/java/play/libs/F.Option.html}}。
+\footnote{\url{https://www.playframework.com/documentation/2.0/api/java/play/libs/F.Option.html}}。
 もちろんユーザとして利用するだけならパターンマッチできない等の制限はありますが便利に使えると思います。
 \end{itembox}
 
@@ -1442,13 +1476,18 @@ Javaのこの実装では冗長なたくさんのコードにより実装され�
 \end{lstlisting}
 
 これを見るとリストは\lstinline{datatype 'a list = :: of 'a * 'a list | nil}
-と定義されていますね。リストというのはコンス(::)の場合と空リストの場合から成り立っています。
+と定義されていますね。リストというのはコンス(\lstinline{::})の場合と空リストの場合から成り立っています。
 \lstinline{::}の場合の要素の部分を見てみると、
 今\lstinline{'a list}が存在しないから作ろうとしているのに、既に\lstinline{'a list}が存在しているかのように
 これを使っています。再帰の構造をしていますね。\\
-ちなみにconsのケースで要素の型に含まれる型変数が\lstinline{'b}ではなく\lstinline{'a}だということも
+ちなみにコンスのケースで要素の型に含まれる型変数が\lstinline{'b}ではなく\lstinline{'a}だということも
 重要な情報です。\lstinline{'a list}の要素の型はすべて\lstinline{'a}型である、
 他の型は含まれないということを表明しているわけです。
+
+再帰的ヴァリアントを用いれば、木構造を簡単に作ることが出来ます。
+２分木の定義は\lstinline{datatype 'a tree = LEAF | NODE of 'a tree * 'a * 'a tree} と
+１行で済みます！
+オブジェクトを用いた場合の実装を想像してみて下さい。私は気がめいります。
 
 最後に応用例として２分探索木を利用した辞書を実装してみましょう。
 ソースコード\ref{code:dict}を見て下さい。ここでは対話環境の応答やプロンプトは省略しています。
@@ -1593,6 +1632,45 @@ TODO: 続き書く
 
 \section{例外}
 
+SMLには他の言語と同じような例外機構があります。
+例外の作成には \lstinline{exception 例外名 <of 型>}、
+例外を投げるときには \lstinline{raise 例外名}、
+それをキャッチするためには
+\lstinline{ 式 handle パターン1 => 式1 | パターン2 => 式2 | ...}
+という構文を用います。
+
+例外の型付けは少し特別です。
+作られた例外はすべて\lstinline{exn}型を持ちます。
+\footnote{例外型を悪用（？）すると面白いことが出来、
+実行時に型によって分岐するプログラムなんかも書けてしまいます\cite{use-exn}！}
+また\lstinline{raise 例外}は多相型\lstinline{'a}を持ちます。
+例外が投げられれば処理を続けることもないので、任意の型をもっても問題ありません。
+
+\begin{minipage}[htb]{0.4\linewidth}
+\begin{lstlisting}[caption=例外の型付け]
+- exception Exn of int;
+@/exception Exn of int/@
+- Exn 100;
+@/val it = Exn(-) : exn/@
+- fn () => raise Exn 1;
+@/val it = fn : unit -> 'a/@
+\end{lstlisting}
+\end{minipage}
+
+\begin{minipage}[htb]{0.6\linewidth}
+\begin{lstlisting}[caption=例外を用いたプログラム例]
+exception Break
+(* int listを受け取ってすべて掛け合わせる関数　
+   途中に0があれば例外を投げて大域脱出 *)
+fun mul l =
+  let fun mul' [] = 1
+        | mul' (x :: xs) =
+          if x = 0
+          then raise Break
+　　　　　　else x * mul' xs
+  in mul' l handle Break => 0 end
+\end{lstlisting}
+\end{minipage}
 
 \section{手続きプログラミング}
 
@@ -1641,6 +1719,9 @@ SMLでは変数は基本的にイミュータブルでした。
 - val r = ref 0;
 @/val r = ref 0 : int ref/@
 
+- val r' = r;
+@/val r' = ref 0 : int ref/@
+
 (* 参照型から値を取り出すには!を使う *)
 - op !;
 @/val it = fn : 'a ref -> 'a/@
@@ -1650,9 +1731,16 @@ SMLでは変数は基本的にイミュータブルでした。
 @/val it = () : unit/@
 
 (* 書き換わってる！ *)
-- !r;
-@/val it = 1 : int/@
+- (!r, !r');
+@/val it = (1,1) : int * int/@
 \end{lstlisting}
+
+\lstinline{ref 0}という値は、
+まさにメモリー上にセルを確保して\lstinline{0}を書き込むプログラムです。
+\lstinline{val r = ref 0}という文で、そのポインタを\lstinline{r}に束縛していると思って下さい。
+\lstinline{val r = r'}はポインタのコピーです。
+そのため\lstinline{r'}が指す先は共通です。
+\lstinline{r}を書き換えれば、\lstinline{r'}の指す先の内容もアップデートされます。
 
 \subsection{繰り返し}
 
@@ -1731,7 +1819,6 @@ val str = (!polyRef) "This operation is illegal !"
 当然型変数に\lstinline{int}を代入しても（２行目）\lstinline{string}を代入しても（３行目）問題ないはずです。
 しかし３行目で\lstinline{!polyRef}の中身は\lstinline{int -> int}の関数になっており、
 このコードは不正な動作をしてしまいます。
-
 原因は\lstinline{polyRef}に多相的な型がつくことです。
 またこのような事が起こる事が分かると、関数適用の結果も多相的になってはいけないことが分かります。
 コンストラクタの適用は副作用は起こし得ないので許されていますが関数適用には副作用があるかもしれないため
@@ -1747,7 +1834,7 @@ val str = (!polyRef) "This operation is illegal !"
 \end{lstlisting}
 
 実用的には、例えば\lstinline{val duplicate = List.map (fn x => (x, x)}
-のようなケースで多相的になってほしいにも関わらず多相的にならない場合があります。\
+のようなケースで多相的になってほしいにも関わらず多相的にならない場合があります。
 多くの場合、$\eta$展開と呼ばれる手法で解決できます。この手法は、先程の例ならば
 \lstinline{fun duplicate l = List.map (fn x => (x, x) l}
 と右辺を関数にしてしまうことです
@@ -1755,7 +1842,7 @@ val str = (!polyRef) "This operation is illegal !"
 デシュガーすると\lstinline{val duplicate = fn l => ...}になります）。
 $\eta$展開についてはラムダ計算の用語なので深追いしませんが、多相的にならないと困った時には
 少し表現を変えるだけで多相的な型がつくことが多いということは覚えておいて下さい。
-p
+
 \begin{itembox}[l]{コラム：手続きとの付き合い方}
 
 ML系言語を書いていると中々手続きとの付き合いというのは切っても切れません。
@@ -1779,6 +1866,13 @@ ML系言語を書いていると中々手続きとの付き合いというのは
 その場合は書き込み・読み込みが無節操に行われるとデバッグが地獄です。
 その場合スコープを制限する仕組みを用いてテーブルの影響範囲を限定しましょう。
 
+\begin{lstlisting}[caption=let式でリファレンスが他からアクセスされないことを保証する]
+val (reader, writer) =
+  let val r = ref 0 in
+    (fn () => !r, fn n => r := n)
+  end
+\end{lstlisting}
+
 \end{itembox}
 
 \section{モジュール}
@@ -1787,7 +1881,7 @@ ML系言語を書いていると中々手続きとの付き合いというのは
 SMLにはオブジェクト指向プログラミング言語のようなクラスは存在しませんが、
 C++の名前空間のような機能があります。
 違いはモジュールを受け取って新たなモジュールを返す
-ファンクター(Functor)・シグニチャ（モジュールの型のようなもの）による型隠蔽の存在です。
+ファンクター(Functor)やシグニチャ（モジュールの型のようなもの）、シグニチャによる型隠蔽の存在です。
 モジュールシステムに関しては綺麗な理論がないため、
 少し理解しづらい・使いづらい部分があるかもしれません。
 SMLで大規模開発をする上でモジュールの理解は不可欠です。他の言語と比較しながら読んでみて下さい。
@@ -2031,7 +2125,7 @@ end
 \end{lstlisting}
 \end{minipage}
 \hfill
-\begin{minipage}[htb]{0.55\textidth}
+\begin{minipage}[htb]{0.55\textwidth}
 \begin{lstlisting}[caption=BinTreeの再定義,label=code:bin-tree-with-sig]
 functor BinTree
   (type elem
@@ -2064,6 +2158,8 @@ where type文がなければ型\lstinline{elem}の実装を隠してしまい、
     \url{http://www.lfcs.inf.ed.ac.uk/reports/92/ECS-LFCS-92-236/ECS-LFCS-92-236.ps}
   \bibitem{ocaml} ``ocaml''
     \url{http://ocaml.org/}
+  \bibitem{use-exn} ``Scrap Your Boilerplate using Dynamic Types in Ordinary SML'' \\
+    \url{https://www.cs.hmc.edu/~oneill/syb/syb-ml-oneill.pdf}
 \end{thebibliography}
 
 
