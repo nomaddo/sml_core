@@ -44,13 +44,14 @@
   xleftmargin=5pt,% 左余白
   xrightmargin=5pt,% 右余白
   keepspaces=true,% 空白を表示する
-  mathescape,% $ で囲った部分を数式として表示する ($ がソースコード中で使えなくなるので注意)
+  mathescape=true,% $ で囲った部分を数式として表示する ($ がソースコード中で使えなくなるので注意)
   backgroundcolor=\color[gray]{0.7},
   % 手動強調表示の設定
   moredelim=[is][\fontfamily{pcr}\selectfont\itshape]{@/}{/@},
   moredelim=[is][\color{red}]{@r\{}{\}@},
   moredelim=[is][\color{blue}]{@b\{}{\}@},
   moredelim=[is][\color{DarkGreen}]{@g\{}{\}@},
+  moredelim=[is][\fontfamily{pcr}\itshape]{@@}{@},
 }
 
 \title{SMLコア言語入門}
@@ -63,7 +64,7 @@
 
 \setlength{\parskip}{0.1cm}
 
-\newcommand{\prog}[1]{\color[gray]{0.7}\lstinline{#1}}
+\newcommand{\prog}[1]{\colorbox[gray]{0.7}{\lstinline{#1}}}
 
 % \newcommand{\beforesection}[1]{
 %  \vspace{-5mm}
@@ -119,7 +120,7 @@ SMLのコア言語の書き方をSML/NJを題材に説明します。
   多くのメジャーディストリビューションではパッケージ管理ソフト経由でインストールすることが出来ます。
   執筆現在(2015年10月12日)で最新版は110.78です、パッケージ管理ソフト経由で
   インストールできるコンパイラは古いかもしれませんが基本的には問題ないはずです。
-  \lstinline{ml-build}などツールがうまく動かないようならばソースコードからコンパイルして下さい。
+  l-buildなどツールがうまく動かないようならばソースコードからコンパイルして下さい。
 \end{itemize}
 \subsection{対話環境について}
 WIndowsを例に見方を説明します。
@@ -132,26 +133,37 @@ WIndowsを例に見方を説明します。
 \end{figure}
 
 コマンドプロンプト上でsmlと入力し、SML/NJを起動しましょう。
-その後上の画像のように、\lstinline{print "Hello, World !\n";}と入力してみて下さい。
+その後上の画像のように、\prog{print "Hello, World !\n";}と入力してみて下さい。
 セミコロンも必ず必要です。画面に正しくプリントされれば成功です！
 
 対話環境の見方を説明します。
 \begin{itemize}
-\item 各行の最初のハイフン(\lstinline{-})は対話環境が挿入するプロンプトです。
+\item 各行の最初のハイフン(\prog{-})は対話環境が挿入するプロンプトです。
   プログラムの一部ではないので気にしてくて大丈夫です。
-\item プログラムが複数行に渡る時は、対話環境がイコール(\lstinline{=})記号を自動的に挿入します。
+\item プログラムが複数行に渡る時は、対話環境がイコール(\prog{=})記号を自動的に挿入します。
   これもプログラムの一部ではないので気にしてくて大丈夫です。
-\item 行の最後に必要なセミコロン(\lstinline{;})は対話環境に入力が終わったことを
+\item 行の最後に必要なセミコロン(\prog{;})は対話環境に入力が終わったことを
   伝えるために必要な文字です。これがなければずっと対話環境は入力待ちをします。
-\item 画面で\lstinline{Hello, World !}の次の行にかかれているように、
+\item 画面で\prog{Hello, World !}の次の行にかかれているように、
   プログラムを実行（これ以降評価と呼びます）すると計算結果とそれの型がプリントされます。
   これによってユーザはインタラクティブに関数を定義し、計算結果を手早く
   確認しながらプログラミングを続けることが出来ます。
 \item 対話環境にいちいち打ち込むのは面倒かもしれません。
-  ファイルのロードには\lstinline{use "./test.sml";}のように、\lstinline{use}関数を使って
+  ファイルのロードには\prog{use "./test.sml";}のように、\prog{use}関数を使って
   ファイルを読み込みます。この場合はファイルはカレントディレクトリにあるため特に指定していませんが、
   ファイルのパスを入力して下さい。そうすると、ファイルに書かれた定義の読み込みやプログラムの評価が行われます。
 \end{itemize}
+
+\subsection{記法}
+
+この記事を読むために必要な記法を導入します。
+
+\begin{itemize}
+\item プログラム中に時々大文字で書かれる特別な意味を持つ名前を導入します。適宜読み替えて下さい。\\
+  EXP: 式, DECL: 宣言・文, TYPE：型
+\item \prog{1 + 2 + 3}のように灰色の背景の文はプログラムを表します
+\end{itemize}
+
 
 \part{基礎文法}
 
@@ -166,12 +178,12 @@ SMLに限らず一般に関数型言語では式を組み合わせてプログ�
 
 値とは直感的には整数・浮動小数点数・文字列・関数とそれを組み合わせて作った
 データ構造などこれ以上簡単に出来ないプログラムのことです。
-例えば\lstinline{print "Hello, world!"}は関数と文字列の適用なので値ではありません。
-これの評価結果(計算結果)である\lstinline{()}(ユニット)は値です。
+例えば\prog{print "Hello, world!"}は関数と文字列の適用なので値ではありません。
+これの評価結果(計算結果)である\prog{()}(ユニット)は値です。
 
 同様にif式もCの三項演算子のように値を返します。
 if式のelse節は省略できません。
-if式の構文は「\lstinline{if 式1 then 式2 else 式3}」（ただし式1の型は\lstinline{bool}, 式2の型=式3の型）です。
+if式の構文は\prog{if @@e1@ then @@e2@ else @@e3@}（ただし式1の型は\prog{bool}, 式2の型=式3の型）です。
 型付けに関しては\ref{sec:static-typing}章で詳しく説明します。
 
 SMLでは、プログラムの実行というのは{\bfseries 式を評価して値にすること}です。
@@ -196,18 +208,18 @@ SMLではプログラムは{\bfseries 静的に}（コンパイル時に）型�
 SMLには{\bfseries 型推論}({\itshape type inference})と呼ばれる、型をプログラマが書かなくても
 処理系が補ってくれる、という機能があります。
 そのためソースコード\ref{code:if-statement}でも一切型を書かなくても
-返り値は\lstinline{int}だな、と判断してくれました。
+返り値は\prog{int}だな、と判断してくれました。
 
 さて、型エラーになる例を見てみましょう。ソースコード\ref{code:type-error1}を見て下さい。\\
-最初の例では\lstinline{int}型の値と
-\lstinline{real}型（CのDoubleのこと）の値を加算しようとして型エラーになりました。
+最初の例では\prog{int}型の値と
+\prog{real}型（CのDoubleのこと）の値を加算しようとして型エラーになりました。
 C言語などでは暗黙のキャストにより型検査に成功しますが、
 SMLではこのような仕組みは存在しません。キャストする関数により明示的に変換する必要があります。
 これは書くのには面倒ですが、プログラムを安全にします。
 \footnote{暗黙のキャストはプログラムを危険にします。例えば浮動小数点数演算の精度・ポインタのキャストなどがプログラマの意識外で行われてしまいます。}\\
 その次にif式に関する型エラーです。
 SMLのif式は、then節・else節で同じ型の値を返さなければなりません。
-下の例でthen節は\lstinline{int}型の値を返していますが、else節では\lstinline{bool}型の値を返しています。
+下の例でthen節は\prog{int}型の値を返していますが、else節では\prog{bool}型の値を返しています。
 そのため型エラーが発生しました。
 
 \begin{lstlisting}[label=code:type-error1,caption=型エラー１]
@@ -226,18 +238,18 @@ SMLのif式は、then節・else節で同じ型の値を返さなければなり�
 \end{lstlisting}
 
 次に関数が登場する例を見てみましょう。ソースコード\ref{code:type-error2}を見て下さい。
-下の例では、まず関数\lstinline{print}の型を確認し、それを使おうとしています。
-関数の型は\lstinline{T1 -> T2}などと、アロー（\lstinline{->}）を用いて表されます。
-今はこの読み方は「\lstinline{T1}型の値を受け取ったら\lstinline{T2}型の値を返す」という理解でOKです。
+下の例では、まず関数\prog{print}の型を確認し、それを使おうとしています。
+関数の型は\prog{T1 -> T2}などと、アロー（\prog{->}）を用いて表されます。
+今はこの読み方は「\prog{T1}型の値を受け取ったら\prog{T2}型の値を返す」という理解でOKです。
 
-関数適用の書式ですが 「\lstinline{ 関数名 引数1 引数2 ...}」 というような記法で書きます。
+関数適用の書式ですが \prog{@@f@ @@e1@ @@e2@ ...} というような記法で書きます。
 C言語で関数適用を書くのとは違いカッコが必要ありません。
-\lstinline{print("12")}と書いてもエラーではありませんがMLらしく
+\prog{print("12")}と書いてもエラーではありませんがMLらしく
 省略できるカッコは省略していきましょう。
 
-さて、\lstinline{int}型の値である12をプリントしようとしていますが、
-\lstinline{print}関数の型は\lstinline{string -> unit}で、
-\lstinline{int}を受け取るようにはできておらず、型エラーになります。
+さて、\prog{int}型の値である12をプリントしようとしていますが、
+\prog{print}関数の型は\prog{string -> unit}で、
+\prog{int}を受け取るようにはできておらず、型エラーになります。
 
 \begin{lstlisting}[caption=型エラー２,label=code:type-error2]
 (* print関数の型を確認しよう *)
@@ -281,7 +293,7 @@ C言語で関数適用を書くのとは違いカッコが必要ありません�
 @/val t2 = (3,(1,3.14)) : int * (int * real)/@
 \end{lstlisting}
 
-val文は「\lstinline{val 変数名 = 式}」という形で書かれます。
+val文は\prog{val @@x@ = @@e@}という形で書かれます。
 注意すべきなのは、デフォルトで変数は{\bfseries 変更不可能}({\itshape immutable})であることです。
 そのため一度定義した値が変わらないことをコンパイラが保証してくれるので
 プログラムを安全に開発することができます。
@@ -301,14 +313,14 @@ val文は「\lstinline{val 変数名 = 式}」という形で書かれます。
 
 さて、ソースコード\ref{code:vals}の最後の例で新しい型、{\bfseries タプル}({\itshape tuple})が現れました。
 タプルというのは組み型と呼ばれ、複数の型の異なる要素をまとめた構造を作ることができます。
-例えば\lstinline{int}と\lstinline{real}型の値を１つにしているときには、
-\lstinline{int * real}のようにこの型は表現されます。タプルの要素は任意の型の要素が許されるので、
-\lstinline{int * (int * real)}などとタプルがネストすることも考えられます。
-ちなみに\lstinline{int * int * real}と\lstinline{int * (int * real)}は違う型なので注意して下さい。
+例えば\prog{int}と\prog{real}型の値を１つにしているときには、
+\prog{int * real}のようにこの型は表現されます。タプルの要素は任意の型の要素が許されるので、
+\prog{int * (int * real)}などとタプルがネストすることも考えられます。
+ちなみに\prog{int * int * real}と\prog{int * (int * real)}は違う型なので注意して下さい。
 前者は３つの要素が入ったタプル型ですが、後者は２つの要素が入ったタプル型で２番目の要素がタプル型
 と読むことが出来ます。
 
-さて、タプルを作る方法はただ\lstinline{(1, "2")}などと書くだけです。
+さて、タプルを作る方法はただ\prog{(1, "2")}などと書くだけです。
 作り方がわかったところで、この構造を破壊する方法を学びましょう。
 
 その前に、スコープの話をしましょう。ソースコード\ref{code:vals}を見て下さい。
@@ -347,15 +359,22 @@ SMLでは{\bfseries レキシカルスコープ}({\itshape lexical scope})を採
   以下のシンボルのみで作られた列(\verb(# |(など基本機能と被るものを除く)\\
 \Verb(!  %  &  $  #  +  -  /  :  <  =  >  ?  @  \  ~  `  ^  |  *(
 \end{itemize}
-シンボリックルールで作る識別子を定義するには\lstinline{op}が必要です。\\
+シンボリックルールで作る識別子を定義するには\prog{op}が必要です。\\
 この識別子は変数・関数・モジュール名・シグニチャ名で共通です。
-\lstinline{structure ## = struct ... end}などと出来るので、
+\prog{structure ## = struct ... end}などと出来るので、
 識別子を見ても例えばそれがモジュール名なのかコンストラクタなのか
 区別する事は見た目だけでは出来ません。
 \end{itembox}
 
 \begin{itembox}[l]{ヒント：関数の結合の強さ}
-関数\lstinline{f}があったときに、
+関数\prog{f}があったときに、\prog{f x + y}というプログラムを書いたならば
+どういう風にパースされるでしょうか？これはとても重要です。
+これに正しく括弧を付けるとしたら\prog{((f x) + y)}です。
+決して\prog{(f (x + y))}ではない事に気をつけて下さい。
+関数型言語では関数の結合の強さが最高だと覚えておいてください。
+
+他の演算子の結合の強さは概ね他の言語と同じようなものです。
+困っても自由にinfix宣言により変更できます。
 \end{itembox}
 
 \subsection{val文を用いたパターンマッチ}
@@ -372,11 +391,11 @@ SMLでは{\bfseries レキシカルスコープ}({\itshape lexical scope})を採
 @/val c = "alice" : string/@
 \end{lstlisting}
 
-さて、上の例ではまずタプル\lstinline{t1}を定義し、それをパターンマッチによって中身の要素を取り出しました。
-val文には「\lstinline{val 変数名 = 式}」という形以外に
-「\lstinline{val パターン = 式}」という形を書くことが出来きこちらのほうがより一般的です。
-例えば\lstinline{val (a,b,c) = t1}と書いた時、\lstinline{t1}の第一要素が\lstinline{a}に束縛・
-第二要素が\lstinline{b}に束縛・第三要素が\lstinline{c}に束縛されます。
+さて、上の例ではまずタプル\prog{t1}を定義し、それをパターンマッチによって中身の要素を取り出しました。
+val文には\prog{val @@x@ = @@e@}という形以外に
+\prog{val @@pat@ = @@e@}という形を書くことが出来きこちらのほうがより一般的です。
+例えば\prog{val (a,b,c) = t1}と書いた時、\prog{t1}の第一要素が\prog{a}に束縛・
+第二要素が\prog{b}に束縛・第三要素が\prog{c}に束縛されます。
 
 タプルの中身の要素を取り出したい、
 でもタプル自体にも名前をつけてアクセスできるようにしたい場合にはasパターンを使います。
@@ -406,12 +425,12 @@ val文には「\lstinline{val 変数名 = 式}」という形以外に
 エラーメッセージでもパターンと式がミスマッチだと言っていますよね。
 
 また、データの一部を名前を付ける必要がないときには、
-\lstinline{val (_, x) = (1, 2)}のように
-ワイルドカード(\lstinline{_})を使用できます。
+\prog{val (_, x) = (1, 2)}のように
+ワイルドカード(\prog{_})を使用できます。
 
 \begin{itembox}[l]{コラム：どんなパターンが存在するの}
   パターンは以下のBNFで表されます。慣れが必要ですがぜひ読んでみてください。
-  \lstinline{<>}でくくられたものはオプション（省略可能）です。
+  \prog{<>}でくくられたものはオプション（省略可能）です。
 \begin{Verbatim}
 pat :=    atpat                       % 単純な場合（アトミックパターン）
         | <op> longvid atpat          % ヴァリアントパターン
@@ -436,7 +455,7 @@ ty      % 型
 \end{Verbatim}
 
 これを見て重箱の隅をつついてみましょう :)。まず定数はパターンです！
-\lstinline{val 1 = 2}みたいな定数パターンのパターンマッチで、正しいコードです。
+\prog{val 1 = 2}みたいな定数パターンのパターンマッチで、正しいコードです。
 （ただし実行時エラーになります）。
 
 ヴァリアントを中置演算子にした形はパターンマッチすることが許されるので、
@@ -481,9 +500,9 @@ val x A y = ...
 といったプログラマの意図をコードの中に表しやすくなります。
 このような用途のためにlet式を導入しましょう。
 
-let式の書き方は「\lstinline{let 宣言１ 宣言２ ... in 式 end}」です
+let式の書き方は\prog{let @@dec1@ @@dec2@ ... in @@e@ end}です
 （Lisp系言語のlet式と殆ど一緒です）。
-\lstinline{end}は忘れやすいですが必須なので気をつけて下さい。
+\prog{end}は忘れやすいですが必須なので気をつけて下さい。
 
 例を見てみましょう。ソースコード\ref{code:let-expression}を見て下さい。
 
@@ -504,12 +523,12 @@ let式の書き方は「\lstinline{let 宣言１ 宣言２ ... in 式 end}」で
 \end{lstlisting}
 
 上の例では、まず半径２の円の面積(area)を計算するために
-円周率\lstinline{pi}と\lstinline{r}を定義してin以降で使用しています。
+円周率\prog{pi}と\prog{r}を定義してin以降で使用しています。
 let式はれっきとした式です。
-なので他の\lstinline{1}や\lstinline{"Himawari" ^ "Sakurako"}といった式と同様に使うことが出来ます。
+なので他の\prog{1}や\prog{"Himawari" ^ "Sakurako"}といった式と同様に使うことが出来ます。
 
 またlet式はスコープを作ります。
-\lstinline{area}を定義するために定義した変数である\lstinline{pi}や\lstinline{r}には
+\prog{area}を定義するために定義した変数である\prog{pi}や\prog{r}には
 let式の外側からはアクセスすることが出来ません。
 
 \begin{lstlisting}[caption=let式のスコープ,label=code:let-scope]
@@ -528,7 +547,7 @@ let式の外側からはアクセスすることが出来ません。
 \section{関数・リスト}
 \subsection{関数を定義する}
 いよいよ関数型言語の味噌である関数について扱っていきます！
-関数は主に「\lstinline{un 変数名 仮引数１ 仮引数２ ... = 式}」
+関数は主に\prog{fun @@f@ @@pat1@ @@pat2@ ... = @@e@}
 というfun宣言により定義されます。
 ソースコード\ref{code:simple-funs}を見てみましょう。
 
@@ -545,26 +564,26 @@ let式の外側からはアクセスすることが出来ません。
 @/val it = 300 : int/@
 \end{lstlisting}
 
-関数適用は以前説明したとおり、「\lstinline{ 関数名 引数１ 引数2 ...}」という形で書かれます。
+関数適用は以前説明したとおり、\prog{@@f@ @@e1@ @@e2@ ...}という形で書かれます。
 C言語のようにカッコは必要ありません。
 
 関数定義に一切型を書いていないのにも関わらず、関数の型が推論されていることに注意して下さい。
-関数\lstinline{plus}の中でプラス演算子を使っていますが、
-これは\lstinline{int}型の要素を２つ取ることを
+関数\prog{plus}の中でプラス演算子を使っていますが、
+これは\prog{int}型の要素を２つ取ることを
 コンパイラ\footnote{正確にはこの場合対話環境ですが :)}は知っているため、
-\lstinline{x}、\lstinline{y}の型は\lstinline{int}型であると推論されます。
-引数の型も推論でき、\lstinline{x + y}の返り値もintであるので、
-関数\lstinline{plus}の型は\lstinline{(int * int) -> int}となります。
+\prog{x}、\prog{y}の型は\prog{int}型であると推論されます。
+引数の型も推論でき、\prog{x + y}の返り値もintであるので、
+関数\prog{plus}の型は\prog{(int * int) -> int}となります。
 
 fun文の引数部分のパターンに対しても型推論が働きます。
-関数\lstinline{plus}では、引数部分にタプルパターンを書いています。
-この場合関数\lstinline{plus}は引数は１つで、それはタプルであると推論されます。
-その後仮引数のタプルの要素である\lstinline{x}、\lstinline{y}の型は
-\lstinline{int}型であることが使われ方からわかるので、
-関数\lstinline{plus}は\lstinline{(int * int) -> int}型を持つことがわかります。
+関数\prog{plus}では、引数部分にタプルパターンを書いています。
+この場合関数\prog{plus}は引数は１つで、それはタプルであると推論されます。
+その後仮引数のタプルの要素である\prog{x}、\prog{y}の型は
+\prog{int}型であることが使われ方からわかるので、
+関数\prog{plus}は\prog{(int * int) -> int}型を持つことがわかります。
 
 関数の定義の中にlet式を使うことが出来ます。
-let式の書き方は「\lstinline{let 宣言１ 宣言２ ... in 式 end}」と書きましたが、
+let式の書き方は\prog{let @@dec1@ @@dec2@ ... in @@e@ end}と書きましたが、
 この宣言をfun文の中に書くことも出来ます。
 これによって関数宣言の中でしか有効でない、定義に必要な補助関数を定義することが出来ます。
 
@@ -589,15 +608,15 @@ let式の書き方は「\lstinline{let 宣言１ 宣言２ ... in 式 end}」と
 
 型推論によってSMLでは多くの場合型を書く必要がありません。
 しかし推論結果が理解できない、なぜ型エラーになるのかわからない時などに型の注釈を書くことができます。
-一般に\lstinline{13 : int}など、「\lstinline{ 式 : 型}」と書きます。
-多くの場合\lstinline{val (x : int) = 13}などと注釈を書いたならば括弧で括る方が
+一般に\prog{13 : int}など、\prog{@@e@ : @@typ@}と書きます。
+多くの場合\prog{val (x : int) = 13}などと注釈を書いたならば括弧で括る方が
 わかりづらいパースエラーが起こらないため安全です。
 
 \subsection{演算子の定義}
 今まで演算子というものが存在するとしてきましたが、
 演算子にパラメータを渡す事は、単に関数適用のシンタックスシュガーに過ぎません。
 
-演算子の型を確認してみましょう。演算子には、\lstinline{op}をつけると通常の関数として扱えます。
+演算子の型を確認してみましょう。演算子には、\prog{op}をつけると通常の関数として扱えます。
 \begin{lstlisting}[caption=演算子を評価する]
 (* 型を確認する *)
 - op +;
@@ -611,7 +630,7 @@ let式の書き方は「\lstinline{let 宣言１ 宣言２ ... in 式 end}」と
 演算子というのは記法は異なりますがただの関数だということが分かりました。
 反対に関数も演算子にすることが出来ます。
 例を見てみましょう。ソースコード\ref{code:infix}を見て下さい。
-このコードでは、べき乗関数\lstinline{power}を定義し、それを中置記法で使えるようにしています。
+このコードでは、べき乗関数\prog{power}を定義し、それを中置記法で使えるようにしています。
 
 \begin{lstlisting}[caption=演算子の定義,label=code:infix]
 - fun power (x, n) =
@@ -627,26 +646,21 @@ let式の書き方は「\lstinline{let 宣言１ 宣言２ ... in 式 end}」と
 @/val it = 1024 : int/@
 \end{lstlisting}
 
-\lstinline{power}関数は普通の数学で扱うようなべき乗の定義通りです。
+\prog{power}関数は普通の数学で扱うようなべき乗の定義通りです。
 infix宣言をするとこれを中置記法で使えるようになります(infixの後の数字は演算子の結合の強さを指定。省略可)。
 中置記法でかけるようにするためには、
-関数は型が\lstinline{('a * 'b) -> ...}という形をしている必要があります。
+関数は型が\prog{('a * 'b) -> ...}という形をしている必要があります。
 そうでないと演算子を定義できても、その演算子にどんな入力を与えても型エラーになります。
 
 さて、演算子にはやはり記号を使いたいですよね。記号で構成された関数も他の関数と同様の方法で定義できます。
-ソースコード\ref{code:operator}では\lstinline{power}と書かずに
-\lstinline{**}で住むように新たな演算子を定義しています。
-
-% TODO: 定義に使える文字のことを書く？
+ソースコード\ref{code:operator}では\prog{power}と書かずに
+\prog{**}で住むように新たな演算子を定義しています。
 
 \begin{lstlisting}[caption=演算子の定義,label=code:operator]
-- fun power (x, n) =
+(* 記号から始まる関数はopをつけてから関数名を書く *)
+- fun op ** (x, n) =
     if n = 0 then 1 else x * power (x, n - 1);
 @/val power = fn : (int * int) -> int/@
-
-(* 記号から始まる関数はopをつけてから関数名を書く *)
-- fun op ** (x, n) = power (x, n);
-@/val ** = fn : int * int -> int/@
 
 (* 普通の関数と同じように使えるよー *)
 - ** (2, 10);
@@ -659,7 +673,7 @@ infix宣言をするとこれを中置記法で使えるようになります(in
 @/val it = 1024 : int/@
 \end{lstlisting}
 
-infix宣言により中置記法で書くこととなった関数は\lstinline{nonfix}により
+infix宣言により中置記法で書くこととなった関数は\prog{nonfix}により
 普通の記法で書かれるように出来ます。
 またinfix宣言は宣言であるため、let式の宣言が並ぶ部分に書くことが出来ます。
 利便性のため一部分でだけで中置記法を用いることが出来るようになります。
@@ -670,10 +684,10 @@ infix宣言により中置記法で書くこととなった関数は\lstinline{n
 今までの関数はすべての型の構成要素が具体的な型（intやrealとそのタプル）になっていました。
 型推論の説明でも、定義の中に現れる演算子や関数の型からわからない変数の型を決定すると説明しました。
 さて、もし関数を定義するとき、型の制約が何もなかったらどんな型を付ければよいでしょうか？
-具体的には\lstinline{fun id x = x}のように関数\lstinline{id}を定義した時、
-\lstinline{x}にはなんの型の制約はありません。この関数はどんな型を持つべきでしょうか。
+具体的には\prog{fun id x = x}のように関数\prog{id}を定義した時、
+\prog{x}にはなんの型の制約はありません。この関数はどんな型を持つべきでしょうか。
 
-正解は{\bfseries どんな型でもいい、型変数'a}を用いて、\lstinline{'a -> 'a}という型がつきます！
+正解は{\bfseries どんな型でもいい、型変数'a}を用いて、\prog{'a -> 'a}という型がつきます！
 ソースコード\ref{code:id}を見て下さい。
 
 \begin{lstlisting}[caption=多相関数,label=code:id]
@@ -685,10 +699,10 @@ infix宣言により中置記法で書くこととなった関数は\lstinline{n
 @/val it = (1,3.0,"hoge") : int * real * string/@
 \end{lstlisting}
 
-\lstinline{'a -> 'a}の\lstinline{'a}はどんな型にもなれます。
-例えば\lstinline{id 1}というのを計算するとき、\lstinline{'a}は\lstinline{int}に
+\prog{'a -> 'a}の\prog{'a}はどんな型にもなれます。
+例えば\prog{id 1}というのを計算するとき、\prog{'a}は\prog{int}に
 {\bfseries 単一化}({\itshape instantiation})されています。
-そのため、\lstinline{id 1}の返り値も\lstinline{int}であることがわかります。
+そのため、\prog{id 1}の返り値も\prog{int}であることがわかります。
 
 このような、型変数が含まれる関数のことを{\bfseries 多相関数}({\itshape polymorphic function})と呼びます。
 単純ですがよく使われる多相関数をいくつか定義してみましょう。
@@ -706,13 +720,13 @@ infix宣言により中置記法で書くこととなった関数は\lstinline{n
 @/val it = 3 : int/@
 \end{lstlisting}
 
-\lstinline{'a}と\lstinline{'b}は違う型変数であることに気をつけて下さい。
-もし\lstinline{fst:'a * 'a -> 'a}ならば、同じ型の要素が２つ入った
-タプルしか受け取ることが出来ませんが、\lstinline{fst: 'a * 'b -> 'a}なので、
+\prog{'a}と\prog{'b}は違う型変数であることに気をつけて下さい。
+もし\prog{fst:'a * 'a -> 'a}ならば、同じ型の要素が２つ入った
+タプルしか受け取ることが出来ませんが、\prog{fst: 'a * 'b -> 'a}なので、
 違う型の要素が２つ入ったタプルを受け取ることが出来ます。
 
-このあたりの型の制約が書けることが、ただC言語の\lstinline{void*}型とは異なる部分です。
-\lstinline{void*}に対しては型チェックをされませんが、型変数に対しては整合性が確認されます。
+このあたりの型の制約が書けることが、ただC言語の\prog{void*}型とは異なる部分です。
+\prog{void*}に対しては型チェックをされませんが、型変数に対しては整合性が確認されます。
 
 \subsection{再帰関数}
 
@@ -732,7 +746,7 @@ infix宣言により中置記法で書くこととなった関数は\lstinline{n
 せいぜい、再帰呼出しのために今定義しようとしている関数名が
 fun文の右辺（fun文のイコール以降の式）に現れる、くらいでしょうか。
 
-関数\lstinline{fact}を見てみましょう。ご存知のように、階乗は以下のように定義されます。
+関数\prog{fact}を見てみましょう。ご存知のように、階乗は以下のように定義されます。
 
 $fact \ n = \begin{cases} 1 & (if \ n = 1) \\ n * fact (n - 1) & otherwise \end{cases}$
 
@@ -740,10 +754,10 @@ $fact \ n = \begin{cases} 1 & (if \ n = 1) \\ n * fact (n - 1) & otherwise \end{
 この定義を素直に書き下しています。
 
 再帰関数は帰納法的な考え方で構築することが出来ます。
-というのは関数\lstinline{fact}の場合、
+というのは関数\prog{fact}の場合、
 \begin{itemize}
 \item ベースケースを記述する（この場合$n=1$のとき）
-\item 帰納法の仮定（\lstinline{fact (n - 1)}は正しく計算される）をつかって、どうすれば\lstinline{fact n}の計算式は正しくなるのか考える
+\item 帰納法の仮定（\prog{fact (n - 1)}は正しく計算される）をつかって、どうすれば\prog{fact n}の計算式は正しくなるのか考える
 \end{itemize}
 というものです。
 
@@ -753,9 +767,9 @@ $n * fact (n - 1)$も$n$の階乗を計算する式として正しい」
 この考え方を用いて後で何回も再帰関数の説明をします。
 
 \subsection{高階関数}
-関数型（アロー型）の表現は\lstinline{T1 -> T2}という形で表されます。
-この意味は\lstinline{T1}型の値を引数に取り、\lstinline{T2}型の値を返す関数という意味でした。
-この例で\lstinline{T1}や\lstinline{T2}はアロー型であることも許されます。
+関数型（アロー型）の表現は\prog{T1 -> T2}という形で表されます。
+この意味は\prog{T1}型の値を引数に取り、\prog{T2}型の値を返す関数という意味でした。
+この例で\prog{T1}や\prog{T2}はアロー型であることも許されます。
 そのような関数はどんな性質を持ちうるのでしょうか？例を見てみましょう。
 
 \begin{lstlisting}[caption=第一級関数,label=code:first-order-funs]
@@ -777,39 +791,39 @@ $n * fact (n - 1)$も$n$の階乗を計算する式として正しい」
 @/val it = 3 : int/@
 \end{lstlisting}
 
-まずは\lstinline{T2}が関数型の例から見てみます。
+まずは\prog{T2}が関数型の例から見てみます。
 ソースコード\ref{code:first-order-funs}の上の例では、
-\lstinline{int -> (int -> int)}型であるの、
-２つの引数を取りその引数を足す関数\lstinline{plus}を定義しています。
-これはプログラム中の\lstinline{int -> int -> int}はカッコを省略した形式です。
+\prog{int -> (int -> int)}型であるの、
+２つの引数を取りその引数を足す関数\prog{plus}を定義しています。
+これはプログラム中の\prog{int -> int -> int}はカッコを省略した形式です。
 今後省略できる括弧はすべて省略していきます。
 この型に対して今までと同じ解釈をすることが出来ます。
-すなわち、関数\lstinline{plus}は\lstinline{int}型の値を１つ受けると\lstinline{int -> int}型の値を返す、
+すなわち、関数\prog{plus}は\prog{int}型の値を１つ受けると\prog{int -> int}型の値を返す、
 {\bfseries 関数を返す関数}なのです！
 
 関数を返す関数は、同じような関数をたくさん定義する場合に便利です。
-例では同じような形をするだろう、関数\lstinline{plusOne}と\lstinline{plusTwo}を定義しています。
-関数\lstinline{plusOne}は関数で、一つ引数をとり1足す関数になっています
-（関数\lstinline{plus}の仮引数のxにすでに１が入っていると考えて下さい）。
-関数\lstinline{plusTwo}も同様です。
+例では同じような形をするだろう、関数\prog{plusOne}と\prog{plusTwo}を定義しています。
+関数\prog{plusOne}は関数で、一つ引数をとり1足す関数になっています
+（関数\prog{plus}の仮引数のxにすでに１が入っていると考えて下さい）。
+関数\prog{plusTwo}も同様です。
 
 T1が関数型であるような関数どういう解釈が出来るかというと、関数を受け取る関数であると考えらる事が出来ます。
-関数\lstinline{twice}は1に対して同じ関数を２回適用する関数です。
+関数\prog{twice}は1に対して同じ関数を２回適用する関数です。
 \footnote{
 ちなみに「関数を引数に適用する」という言葉は関数と引数の順番をよく間違えられています。
 私は英語で覚えています。
 apply A to Bは、意味はAをB当てはめるという意味です。
 ジェネリックな存在である関数を実際の引数に当てはめる、という覚え方が簡単かなぁと思います}
-\lstinline{int -> int}型の関数を引数にとり、それを２度使います。
+\prog{int -> int}型の関数を引数にとり、それを２度使います。
 
-このように関数が他の\lstinline{int}型や\lstinline{string}型の値と同じように
+このように関数が他の\prog{int}型や\prog{string}型の値と同じように
 扱えることを指して「{\bfseries 関数が第一級である}」と言うことがあります。
 また関数を返す関数や、関数を操作する関数を指して「{\bfseries 高階関数}」と呼びます。
 
-さて、最後にこれらの要素を使った例として微分関数\lstinline{diff}を定義してみましょう。
+さて、最後にこれらの要素を使った例として微分関数\prog{diff}を定義してみましょう。
 ソースコード\ref{code:diff}を見て下さい。
-微分演算子$'$（この例では\lstinline{diff}関数）
-はまず\lstinline{real -> real}型の関数fを受け取り、一引数関数を返す関数です。
+微分演算子$'$（この例では\prog{diff}関数）
+はまず\prog{real -> real}型の関数fを受け取り、一引数関数を返す関数です。
 微分演算の定義を確認してみると、
 $f' = \lim_{a \to 0}\frac{f(x+a) - f(x)}{a}$
 でしたね。今回は極限は近似して$a = 0.0000000001$として計算してみます。
@@ -831,19 +845,19 @@ $f' = \lim_{a \to 0}\frac{f(x+a) - f(x)}{a}$
 @/val it = (0.50000004137,0.5) : real * real/@
 \end{lstlisting}
 
-関数\lstinline{diff}を定義した後、
+関数\prog{diff}を定義した後、
 確認のため標準ライブラリのMathモジュールに含まれる
-\lstinline{sin}関数を微分して\lstinline{myCos}を定義しました。
-その後、ライブラリに含まれる\lstinline{cos}関数と\lstinline{myCos}に同じ引数を与え、
-出力結果を比べられるようにしました。誤差はあるものの、概ね\lstinline{cos}関数として動作しているように見えますね。
+\prog{sin}関数を微分して\prog{myCos}を定義しました。
+その後、ライブラリに含まれる\prog{cos}関数と\prog{myCos}に同じ引数を与え、
+出力結果を比べられるようにしました。誤差はあるものの、概ね\prog{cos}関数として動作しているように見えますね。
 
 \subsection{local文}
 
 関数定義のために補助的な定義を書きたいことは沢山あります。
 しかしlet文がネストするのは避けたい場合というのはあると思いますが、
 local文を用いると解決します。
-local文は「\lstinline{local 宣言11 宣言12 ... in 宣言21 宣言22 ... end}」という文法です。
-\lstinline{local}から\lstinline{in}までの定義は\lstinline{in}以降からはアクセスできますが、
+local文は\prog{local @@dec1@  @@dec2@ ... in @@dec3@ @@dec4@ ... end}という文法です。
+\prog{local}から\prog{in}までの定義は\prog{in}以降からはアクセスできますが、
 外側からアクセスすることは出来ません。
 
 \begin{lstlisting}[caption=local文]
@@ -892,15 +906,15 @@ local文は「\lstinline{local 宣言11 宣言12 ... in 宣言21 宣言22 ... en
 % \end{itembox}
 
 \begin{itembox}[l]{コラム：アドホック多相性}
-関数\lstinline{plus}の型を見て不自然に思った方もいるかもしれません。\\
-プラス演算子は\lstinline{3.14 + 1.1}のように、real型の値の演算にも用いられます。
-しかし、ソースコード\ref{code:first-order-funs}の関数\lstinline{plus}は
-\lstinline{int -> int -> int}型の関数であると推論されています。
-\lstinline{real -> real -> real}型のplusRealを定義するためには
-\lstinline{fun plusReal (x:real) y = x + y}
+関数\prog{plus}の型を見て不自然に思った方もいるかもしれません。\\
+プラス演算子は\prog{3.14 + 1.1}のように、real型の値の演算にも用いられます。
+しかし、ソースコード\ref{code:first-order-funs}の関数\prog{plus}は
+\prog{int -> int -> int}型の関数であると推論されています。
+\prog{real -> real -> real}型のplusRealを定義するためには
+\prog{fun plusReal (x:real) y = x + y}
 のように型注釈を書く必要があります。
 
-関数\lstinline{plus}に\lstinline{int -> int -> int}
+関数\prog{plus}に\prog{int -> int -> int}
 型がつくことは少し変です。
 プラス演算子はreal型にも使えるはずなので、より一般的な型がついてもいいはずです。
 
@@ -912,9 +926,9 @@ SMLの型システムで表せるのは「\textbf{何でも受け取る'a}」も
 
 この問題に対する解決策はいくつか考えられています。
 一つは型クラスです。型クラスでは、「型パラメータ'a、ただし'aの動く範囲は制限されている」という事がかけます。
-Haskellでは例えば、加算演算子は\lstinline{Num a => a -> a -> a}という型を持ちます。
-\lstinline{Num a}の意味は「型パラメータaはNumに属している型に限られる」という意味です。
-加算、減算などが可能な値の型は\lstinline{Num}に属するようになっています。
+Haskellでは例えば、加算演算子は\prog{Num a => a -> a -> a}という型を持ちます。
+\prog{Num a}の意味は「型パラメータaはNumに属している型に限られる」という意味です。
+加算、減算などが可能な値の型は\prog{Num}に属するようになっています。
 
 \begin{lstlisting}[caption=Haskellでのplusの型付け]
 Prelude> :t (+)
@@ -926,13 +940,13 @@ Prelude> :t plus
 \end{lstlisting}
 
 東北大学の大堀研で開発されているSML\#\cite{smlsharp}では、第一級オーバーローディングが実装されています。
-例えば、関数\lstinline{plus}の型は以下のように表されます。
+例えば、関数\prog{plus}の型は以下のように表されます。
 \begin{lstlisting}[caption=SML\#でのplusの型付け]
 fun plus x = x + x;
 @/val plus = fn/@
 @/  : ['a::int, IntInf.int, real, Real32.real, word, Word8.word. 'a -> 'a] /@
 \end{lstlisting}
-\lstinline{'a::int, IntInf.int, real, Real32.real, word, Word8.word.}
+\prog{'a::int, IntInf.int, real, Real32.real, word, Word8.word.}
 は型変数'aはint, IntInt.int, real, ...のどれかであることを表しています。
 このような型を持つ関数もユーザが書くことも出来ます。
 
@@ -943,9 +957,9 @@ fun plus x = x + x;
 \subsection{リストの基本}
 リストは変更不可能なデータ構造で、データの列を扱うときに
 関数型プログラミングでは良く用いられる重要なデータ構造です。
-リストは今までの型とは少し異なり、\lstinline{list}だけでは型を表しません。
+リストは今までの型とは少し異なり、\prog{list}だけでは型を表しません。
 型の一部をパラメータ化しており、
-\lstinline{int list}や\lstinline{string list}など、
+\prog{int list}や\prog{string list}など、
 「{\bfseries 何かのリスト}」であることを型の上で表現します。
 
 まずは例を見てみましょう。ソースコード\ref{code:list}を見て下さい。
@@ -959,10 +973,10 @@ fun plus x = x + x;
 @/val it = [[(1,2)],[(3,4)]] : (int * int) list list/@
 \end{lstlisting}
 
-\lstinline{'a list}の\lstinline{'a}部分が色々な型に変わっていますね。
-\lstinline{'a}は何が代入されてもいいので、リストがネストしたり中にタプルが入っても構いません。
+\prog{'a list}の\prog{'a}部分が色々な型に変わっていますね。
+\prog{'a}は何が代入されてもいいので、リストがネストしたり中にタプルが入っても構いません。
 
-空のリストなど、\lstinline{'a list}の\lstinline{'a}部分が単相化（具体的な型に置き換わってない）
+空のリストなど、\prog{'a list}の\prog{'a}部分が単相化（具体的な型に置き換わってない）
 されていないリストも考えられます。そのため、多相的なリストというものも考えられます。
 
 \begin{lstlisting}[caption=多相的なリスト,label=code:poly-list]
@@ -979,8 +993,8 @@ fun plus x = x + x;
 
 リストを扱うためにプリミティブな演算子を紹介します。
 \begin{itemize}
-\item \lstinline{::} \ 演算子は、リストの先頭に要素を追加して新しいリストを作る演算子です。
-\item \lstinline{@} \ 演算子は、リスト同士を結合する演算子です。
+\item \prog{::} \ 演算子は、リストの先頭に要素を追加して新しいリストを作る演算子です。
+\item \prog{@} \ 演算子は、リスト同士を結合する演算子です。
 \end{itemize}
 
 \begin{lstlisting}[caption=リスト操作演算子の型,label=code:list-operators]
@@ -990,9 +1004,9 @@ fun plus x = x + x;
 @/val it = fn : 'a list * 'a list -> 'a list/@
 \end{lstlisting}
 
-注意することは、\lstinline{::}は右結合的だということです。
-例えば\lstinline{1 :: 2 :: []}と書いた時には\lstinline{1 :: (2 :: [])}のように演算子が結合します。
-\lstinline{(1 :: 2) :: []}という結合順序では型エラーになりますよね？
+注意することは、\prog{::}は右結合的だということです。
+例えば\prog{1 :: 2 :: []}と書いた時には\prog{1 :: (2 :: [])}のように演算子が結合します。
+\prog{(1 :: 2) :: []}という結合順序では型エラーになりますよね？
 
 さて、これらの演算子を使って簡単なリスト操作をする関数を書いてみましょう。
 その前にval文・fun文以外のパターンマッチについて触れます。
@@ -1004,7 +1018,7 @@ val文などのパターンが書ける部分でパターンマッチが出来�
 リスト操作では「入力が空リストかそうでないかで処理を分ける」みたいな事が簡単に書けるならば便利そうです。
 
 そのためにcase式を用います。
-case式は「\lstinline{case 式 of パターン１ => 式１ | パターン２ => 式２ ...}」
+case式は\prog{case @@e@ of @@pat1@ => @@e1@ | @@pat2@ => @@e2@ ...}
 のように使います。
 例を見てみましょう。ソースコード\ref{code:case}を見て下さい。
 
@@ -1026,14 +1040,14 @@ case式は「\lstinline{case 式 of パターン１ => 式１ | パターン２ 
 
 前半部分ではcases式を評価しています。
 このcase式はリストが空の時、要素が１だけの時、要素が２つだけの時、それ以上の時で分岐しています。case式の分岐を書くとき、順番に気をつける必要があります。
-例えば\lstinline{case 1 of n => 0 | 1 => 1}というプログラムがあったときに
-整数は変数パターン\lstinline{n}に必ずマッチするのでこのプログラムは絶対に２つ目の分岐部分に到達することはありません。
+例えば\prog{case 1 of n => 0 | 1 => 1}というプログラムがあったときに
+整数は変数パターン\prog{n}に必ずマッチするのでこのプログラムは絶対に２つ目の分岐部分に到達することはありません。
 書く順番が逆ならそんなことはありません。
 この場合対話環境が\textit{Error: match redundant}とパターンマッチが冗長だ、と警告を出すはずです。
 
-さて、次の関数\lstinline{sum}では、仮引数\lstinline{l}が空リストかそうでないかで分岐しています。
+さて、次の関数\prog{sum}では、仮引数\prog{l}が空リストかそうでないかで分岐しています。
 これはリスト操作をする関数では典型的なパターンです。
-関数\lstinline{sum}は以下の帰納法のような考え方に基づいて作られています。
+関数\prog{sum}は以下の帰納法のような考え方に基づいて作られています。
 \begin{itemize}
 \item ベースケース：入力$l = []$のとき和は0
 \item 入力$l = x :: xs$のとき、$sum \ xs$は正しく計算されていると仮定する。\\
@@ -1041,13 +1055,13 @@ case式は「\lstinline{case 式 of パターン１ => 式１ | パターン２ 
 \end{itemize}
 
 パターンマッチでは、すべての場合を網羅できていないと処理系が警告します。\\
-例えば\lstinline{case 1 of 1 => "Fuso" | 2 => "Yamashiro"}のように
-int型の値をパターンマッチしてみると、\lstinline{@/stdIn:16.1-16.26 Warning: match nonexhaustive/@}
+例えば\prog{case 1 of 1 => "Fuso" | 2 => "Yamashiro"}のように
+int型の値をパターンマッチしてみると、\prog{@/stdIn:16.1-16.26 Warning: match nonexhaustive/@}
 というメッセージが出るはずです。これはパターンの列挙に漏れがあることを警告しています。
 この警告はcase式を使った場合だけではなくあらゆるパターンマッチを行った時に機能します。
 
 警告が出た時に修正が面倒だったり理由が分からなければanyパターンを用いることが出来ます。
-例えば\lstinline{case 1 of _ => 1}のようにアンダーバーを用いればどんなパターンにもヒットします。
+例えば\prog{case 1 of _ => 1}のようにアンダーバーを用いればどんなパターンにもヒットします。
 しかしanyパターンは何でもヒットしてしまうためにパターンマッチの網羅性検査を
 事実上機能させなくしてしまうので、多用するのは避けるべきです。
 
@@ -1066,21 +1080,21 @@ int型の値をパターンマッチしてみると、\lstinline{@/stdIn:16.1-16
 @/val it = [3,2,1] : int list/@
 \end{lstlisting}
 
-関数\lstinline{rev}の作り方が正しいことを、また帰納法のような考え方でこれを説明してみましょう。
+関数\prog{rev}の作り方が正しいことを、また帰納法のような考え方でこれを説明してみましょう。
 \begin{itemize}
 \item ベースケース：入力$l=[]$のとき、空リストは空リストの逆順になっている
 \item 入力$l = x \ :: \ xs$のとき、$rev \ xs$は$xs$を正しく逆順にすると仮定する。\\
   この時$rev \ xs$の後ろに$x$を付ければ$l = x \ :: \ xs$を正しく逆順にする
 \end{itemize}
 
-関数の引数に対して\lstinline{rev}と同様に引数をcase式でパターンマッチ出来ました
+関数の引数に対して\prog{rev}と同様に引数をcase式でパターンマッチ出来ました
 \footnote{簡単のためにこのような実装になっていますが実はこれは推奨されない実装です。
-なぜならば\lstinline{@}演算子はリストを全部操作するためコストが大きいからです。\\
-\lstinline{fun rev' acc [] = acc | rev' acc (x::xs) = rev' (x::acc) xs; fun rev l = rev' [] l}などと定義するほうが遥かに効率が良いです}。
+なぜならば\prog{@}演算子はリストを全部操作するためコストが大きいからです。\\
+\prog{fun rev' acc [] = acc | rev' acc (x::xs) = rev' (x::acc) xs; fun rev l = rev' [] l}などと定義するほうが遥かに効率が良いです}。
 ここで、fun文でタプルのパターンマッチをしたことを思い出しましょう。
 これと同様なことがリストに対してもできれば便利そうです。
 
-関数\lstinline{rev}をその形で書きなおしてみます。ソースコード\ref{code:rev2}を見てください。
+関数\prog{rev}をその形で書きなおしてみます。ソースコード\ref{code:rev2}を見てください。
 
 \begin{lstlisting}[caption=引数部分でのパターンマッチ,label=code:rev2]
 - fun rev [] = []
@@ -1093,8 +1107,8 @@ int型の値をパターンマッチしてみると、\lstinline{@/stdIn:16.1-16
 ソースコード\ref{code:rev1}と\ref{code:rev2}は挙動は全く一緒なので、好みで使い分けて下さい。
 この文章でも書きやすい方を選んでその都度違うスタイルを取ります。
 
-次に関数\lstinline{map}を定義してみましょう。
-\lstinline{map}関数は関数をひとつ受け取り、それを更に受け取ったリストのすべての要素に適用する関数です。
+次に関数\prog{map}を定義してみましょう。
+\prog{map}関数は関数をひとつ受け取り、それを更に受け取ったリストのすべての要素に適用する関数です。
 \footnote{他の言語ではreduce,selectと呼ばれることもあります。}
 
 \begin{lstlisting}[caption=関数fとリストlを受け取り、lの要素全てにfを適用する関数, label=code:map]
@@ -1112,24 +1126,24 @@ int型の値をパターンマッチしてみると、\lstinline{@/stdIn:16.1-16
 @/val it = ["1","2","3"] : string list/@
 \end{lstlisting}
 
-上の例では\lstinline{map}を定義した後、受け取った引数に１足すだけの関数関数\lstinline{add1}を定義して
-\lstinline{map}関数に渡しています。
-\lstinline{map add1 [1,2,3]}の実行結果を見ると\lstinline{[2,3,4]}となっており、
+上の例では\prog{map}を定義した後、受け取った引数に１足すだけの関数関数\prog{add1}を定義して
+\prog{map}関数に渡しています。
+\prog{map add1 [1,2,3]}の実行結果を見ると\prog{[2,3,4]}となっており、
 すべての要素が１足されていることが分かります。
 
-また関数\lstinline{map}の型を見ると、
-\lstinline{('a -> 'b) -> 'a list -> 'b list}となっています。
+また関数\prog{map}の型を見ると、
+\prog{('a -> 'b) -> 'a list -> 'b list}となっています。
 この型と関数名から概ね動作を予想できます。
-なぜなら今与えられたのは\lstinline{f : 'a -> 'b}と\lstinline{l : 'a list}だけです。
-これから\lstinline{'b}型の値を手に入れるには、リストの要素に\lstinline{f}を適用するしか方法がありません。
-それでいて名前が\lstinline{map}です。名前と型で動作が予想できることが分かっていただけたと思います。
+なぜなら今与えられたのは\prog{f : 'a -> 'b}と\prog{l : 'a list}だけです。
+これから\prog{'b}型の値を手に入れるには、リストの要素に\prog{f}を適用するしか方法がありません。
+それでいて名前が\prog{map}です。名前と型で動作が予想できることが分かっていただけたと思います。
 
-ここでわざわざ関数\lstinline{map}に渡すためだけに関数\lstinline{add1}を定義するのは
+ここでわざわざ関数\prog{map}に渡すためだけに関数\prog{add1}を定義するのは
 面倒です。その場で関数がささっと書ける方法があると便利そうです。
 名前のない関数である{\bfseries 匿名関数}({\itshape Anonymous function})は、
-\lstinline{fn パターン => 式}という形で書くことが出来ます。
+\prog{fn @@pat@ => @@e@}という形で書くことが出来ます。
 これも他の関数同様第一級です
-\footnote{実はfun文は\lstinline{val funName = fn pat1 => pat2 => ...}のシンタックスシュガーです}
+\footnote{実はfun文は\prog{val @@f@ = fn @@pat1@ => @@pat2@ => ...}のシンタックスシュガーです}
 。
 
 \begin{lstlisting}[caption=匿名関数,label=code:anonymous]
@@ -1141,7 +1155,7 @@ int型の値をパターンマッチしてみると、\lstinline{@/stdIn:16.1-16
 \end{lstlisting}
 
 匿名関数としてカリー化されている、複数引数を受け取る関数を作るには
-\lstinline{fn x => fn y => ...}のように書く必要があります。
+\prog{fn x => fn y => ...}のように書く必要があります。
 また匿名関数を使う例は次の節にたくさん現れますので確認してみて下さい。
 % TODO: カリーかをどこに書く？
 
@@ -1150,7 +1164,7 @@ int型の値をパターンマッチしてみると、\lstinline{@/stdIn:16.1-16
 最後にSML/NJが提供する標準ライブラリのListモジュールに含まれる関数を見ていきます。
 テーブル\ref{fig:list-table}を見て下さい。
 全ての関数は取り上げないので、詳しくはリファレンスを見て下さい\cite{sml-libs}。
-ちなみに述語とは、\lstinline{bool}型の要素を返す１引数関数のことです。
+ちなみに述語とは、\prog{bool}型の要素を返す１引数関数のことです。
 
 \begin{table}[htbp]
   \begin{tabular}{|c|c|l|}
@@ -1213,7 +1227,7 @@ tabulate & int * (int -> 'a) -> 'a list                    & 0からn-1を関数
 
 \begin{itembox}[l]{コラム：ドキュメントとしての型}
 テーブル\ref{fig:list-table} を見てると、型がドキュメントとして有効に働いていると分かります。
-例えば\lstinline{List.partition}の型は\lstinline{('a -> bool) -> 'a list -> 'a list * 'a list}
+例えば\prog{List.partition}の型は\prog{('a -> bool) -> 'a list -> 'a list * 'a list}
 ですが、これと名前を見れば、述語を受け取って、述語がtrueになる要素とfalseになる
 要素を２つに分ける関数だということが分かります。
 
@@ -1223,28 +1237,28 @@ tabulate & int * (int -> 'a) -> 'a list                    & 0からn-1を関数
 \end{itembox}
 
 \begin{itembox}[l]{コラム：foldlとfoldr}
-  \lstinline{List.foldl}は非常にプリミティブなリスト操作関数です。
-  まずは再帰関数でリスト操作を考えるよりも、\lstinline{foldl}で実装できないか考えるべきです。
-  \lstinline{foldl}を使って\lstinline{List}モジュールに含まれる関数を実装してみましょう。
+  \prog{List.foldl}は非常にプリミティブなリスト操作関数です。
+  まずは再帰関数でリスト操作を考えるよりも、\prog{foldl}で実装できないか考えるべきです。
+  \prog{foldl}を使って\prog{List}モジュールに含まれる関数を実装してみましょう。
   なぜ正しく動くのか考えてみることは良い練習問題になります！ぜひ考えてみて下さい！
 
-  \lstinline{foldl}、\lstinline{foldr}に渡す関数は概ね
-  \lstinline{fn (x, acc) => ...}という形になります。
-  \lstinline{acc}は所謂アキュムレータで、今までの計算結果を引数として受け取るときに
+  \prog{foldl}、\prog{foldr}に渡す関数は概ね
+  \prog{fn (x, acc) => ...}という形になります。
+  \prog{acc}は所謂アキュムレータで、今までの計算結果を引数として受け取るときに
   よく用いられる名前です。つまり畳み込み関数に渡す関数は
-  今処理する要素\lstinline{x}と今までの処理結果\lstinline{acc}をどう処理して
-  \lstinline{acc}と同じ型の要素を返すのか
+  今処理する要素\prog{x}と今までの処理結果\prog{acc}をどう処理して
+  \prog{acc}と同じ型の要素を返すのか
   記述したものになっていればいいわけです(コードから読み取れるでしょうか？)。
-  \lstinline{fn (x, acc) => x::acc}を渡して初期値のリストに次々要素を
-  繋げていけば最終的に逆順になりますよね(関数\lstinline{rev})。
-  \lstinline{fn (x, acc) => f x::acc}のように、
-  関数\lstinline{f}を要素に適用してその結果を繋げていけば
-  関数\lstinline{map}の出来上がりです。
-  ただし、左の要素（先頭の方）から処理して\lstinline{acc}の先頭に足していくと
+  \prog{fn (x, acc) => x::acc}を渡して初期値のリストに次々要素を
+  繋げていけば最終的に逆順になりますよね(関数\prog{rev})。
+  \prog{fn (x, acc) => f x::acc}のように、
+  関数\prog{f}を要素に適用してその結果を繋げていけば
+  関数\prog{map}の出来上がりです。
+  ただし、左の要素（先頭の方）から処理して\prog{acc}の先頭に足していくと
   自然に逆順になるので逆から処理していく必要があります。
-  \lstinline{foldl}と\lstinline{foldr}の違いは先頭から処理していくか
+  \prog{foldl}と\prog{foldr}の違いは先頭から処理していくか
   最後から処理していくのかの違いです。
-  そのため下の\lstinline{map}では\lstinline{foldr}を使っています。
+  そのため下の\prog{map}では\prog{foldr}を使っています。
 
 \begin{lstlisting}
 - fun foldl f acc [] = acc
@@ -1257,11 +1271,11 @@ tabulate & int * (int -> 'a) -> 'a list                    & 0からn-1を関数
 - fun rev l = foldl (fn (x, acc) => x::acc) [] l;
 @/val rev = fn : 'a list -> 'a list/@
 
-- fun map f l = (List.foldr (fn (x, acc) => f x :: acc) [] l);
+- fun map f l = List.foldr (fn (x, acc) => f x :: acc) [] l;
 @/val map = fn : ('a -> 'b) -> 'a list -> 'b list/@
 
-- fun forall f l = foldl (fn (x, acc) => f x andalso acc) true l
-@/val forall = fn : ('a -> bool) -> 'a list -> bool/@
+- fun all f l = foldl (fn (x, acc) => f x andalso acc) true l
+@/val all = fn : ('a -> bool) -> 'a list -> bool/@
 \end{lstlisting}
 \end{itembox}
 
@@ -1269,7 +1283,7 @@ tabulate & int * (int -> 'a) -> 'a list                    & 0からn-1を関数
 \label{sec:record}
 構造体のような、複数の要素をまとめる方法をこの章では学びましょう。
 タプルは複数の値を１つにまとめる手段として既に登場しましたが、
-アクセスするときに順番（例えば\lstinline{(a, b, c)}という形のパターンなら\lstinline{a}は１番目）
+アクセスするときに順番（例えば\prog{(a, b, c)}という形のパターンなら\prog{a}は１番目）
 でそれぞれの要素を区別していました。
 これは、たくさんの種類の構造が入り乱れるときには不便です。
 構造体の要素にアクセスするときのような、意味のある名前でアクセスしたいですよね。
@@ -1303,21 +1317,21 @@ SMLのレコードの特徴・使い方のみに注目します。
 @/val plus = fn : {x:int, y:real} -> int/@
 \end{lstlisting}
 
-レコードは「\lstinline|{フィールド名1=式1, フィールド名2=式2, ...}|」
+レコードは\prog{\{@@field1@=@@e1@, @@field2@=@@e2@, ...\}}
 という形で書かれます。
 レコードから要素を取り出す方法は主に２つです。
-１つは\lstinline{#フィールド名 レコード}
+１つは\prog{#@@field@ @@e@}
 という形でフィールドアクセス関数を経由して取り出す方法があり、
 もうひとつはval文・fun文におけるパターンマッチによる要素取り出しがあります。
 パターンマッチで取り出す際は、
-パターンには\lstinline|{フィールド名１＝束縛変数名1, フィールド名２＝束縛変数名2,  ...}|という風に書かれます。\\
+パターンには\prog{\{@@field1@=@@x1@, @@field2@=@@x2@,  ...\}}という風に書かれます。\\
 複数の要素があるレコードから一部のフィールド名の要素を取り出す時、
-\lstinline{...}(ワイルドカードパターン)を使うことが出来ます。
+\prog{...}(ワイルドカードパターン)を使うことが出来ます。
 例えば上の例のようにx、yのフィールドが存在するレコードに対して、
-フィールドxの要素のみを取り出す時、\lstinline|val {x=num,...}|と書いて他のフィールドを省略できます。
+フィールドxの要素のみを取り出す時、\prog{val \{x=num,...\}}と書いて他のフィールドを省略できます。
 
-レコード型の型はソースコード\ref{code:record}の\lstinline{plus}関数のように、
-\lstinline|{フィールド名１:型１,フィールド名２:型２,...}|
+レコード型の型はソースコード\ref{code:record}の\prog{plus}関数のように、
+\prog{\{@@field1@:@@typ1@,@@field2@:@@typ2@,...\}}
 という形です。これは直感的に分かりやすいと思います。
 型・レコードの束縛・パターンマッチにおいて、フィールドの順番はどんな順番でも構いません。
 
@@ -1332,18 +1346,18 @@ SMLのレコードの特徴・使い方のみに注目します。
 SMLにおいてレコードは特に宣言もなく使えますが、これの扱いは気をつける点があります。
 それはレコードの型は、\textbf{すべてのフィールド名が明らかになっていなければならない}ことです。
 例を見てみましょう。ソースコード\ref{code:unresolved-record}を見て下さい。\\
-関数\lstinline{plus'}はレコード\lstinline{r}を受け取り、
-フィールドアクセス関数\lstinline{#x}と\lstinline{#y}を用いて要素を取り出し
-ソースコード\ref{code:record}の\lstinline{plus}関数と同じく\lstinline{y}をキャストしてから
-\lstinline{x}と加算しています。しかしこれはコンパイルが通りません。
-これはフィールド\lstinline{x}, \lstinline{y}がレコード\lstinline{r}に含まれることは分かるけども、
-それ以外のフィールドが\lstinline{r}に存在するかもしれず\lstinline{r}の型を確定できないからです。\\
-このコードままコンパイルを通すためには型注釈を書けば良いです。\lstinline{plus''}を見て下さい。
-関数\lstinline{idX}はレコードを受け取り、その中に含まれるフィールド\lstinline{x}の要素を返す関数です。
-これも関数\lstinline{plus'}と同じ理由でコンパイルが通りません。
-\lstinline{idX'}の定義のように、フィールド名をすべて列挙すれば型が決まるためコンパイルできます。\\
-また、\lstinline{#}から始まるフィールドアクセス関数はれっきとした関数で、他の式と組み合わせることが出来ます。
-あまり困ることはないと思いますが、\lstinline{#x}のようにそれ単体で評価しても型が決まりません。
+関数\prog{plus'}はレコード\prog{r}を受け取り、
+フィールドアクセス関数\prog{#x}と\prog{#y}を用いて要素を取り出し
+ソースコード\ref{code:record}の\prog{plus}関数と同じく\prog{y}をキャストしてから
+\prog{x}と加算しています。しかしこれはコンパイルが通りません。
+これはフィールド\prog{x}, \prog{y}がレコード\prog{r}に含まれることは分かるけども、
+それ以外のフィールドが\prog{r}に存在するかもしれず\prog{r}の型を確定できないからです。\\
+このコードままコンパイルを通すためには型注釈を書けば良いです。\prog{plus''}を見て下さい。
+関数\prog{idX}はレコードを受け取り、その中に含まれるフィールド\prog{x}の要素を返す関数です。
+これも関数\prog{plus'}と同じ理由でコンパイルが通りません。
+\prog{idX'}の定義のように、フィールド名をすべて列挙すれば型が決まるためコンパイルできます。\\
+また、\prog{#}から始まるフィールドアクセス関数はれっきとした関数で、他の式と組み合わせることが出来ます。
+あまり困ることはないと思いますが、\prog{#x}のようにそれ単体で評価しても型が決まりません。
 文脈で決まる場合は大丈夫ですが、そうでない場合はレコードやアクセス関数に型注釈を書けば通ります。
 
 \begin{lstlisting}[caption=フィールド名が解決出来ない例,label=code:unresolved-record]
@@ -1368,7 +1382,7 @@ SMLにおいてレコードは特に宣言もなく使えますが、これの�
 最後に、タプルはレコードの表現のシンタックスシュガーであることを紹介します。
 タプルは、レコードのフィールド名が1,2,...と整数で表されたただのレコードです。
 そのため、フィールドアクセス関数を利用できます。
-例えばタプルの第一要素を取り出したければ\lstinline{#1}を用いればいいわけです。
+例えばタプルの第一要素を取り出したければ\prog{#1}を用いればいいわけです。
 
 \begin{lstlisting}[caption=タプルはレコード,label=code:tuple-is-record]
 - {1="hoge", 2="null"};;
@@ -1383,7 +1397,7 @@ SMLにおいてレコードは特に宣言もなく使えますが、これの�
 レコード型は長いため、もし型を何回も書くとするととても不便です。
 型に名前を付けるためにtype文を使いましょう。
 ソースコード\ref{code:type-alias}を見て下さい。
-type文は「\lstinline{type <パラメータ> 型名 = 型}」という構文です。
+type文は\prog{type <PARAM> @@typ@ = @@typ@}という構文です。
 
 \begin{lstlisting}[caption=型のエイリアス,label=code:type-alias]
 - type t = {x:int, y:real};
@@ -1425,9 +1439,9 @@ let plus r = r.x + int_of_float r.y;;
  「\textbf{レコード型のフィールドはすべて明らかになっていなければならない}」
   という制約はなくなり、
   型が与える情報はレコードが持つべき最低限のフィールドとその型をあたえるものになっています。
-  ソースコード\ref{code:poly-record}では、関数\lstinline{f}の型をみると、
-  「型変数\lstinline{'b}、ただし\lstinline{'b}はレコード型で少なくとも
-  \lstinline{'a}型のフィールド\lstinline{name}は含まれる」という制約を書き下しています。
+  ソースコード\ref{code:poly-record}では、関数\prog{f}の型をみると、
+  「型変数\prog{'b}、ただし\prog{'b}はレコード型で少なくとも
+  \prog{'a}型のフィールド\prog{name}は含まれる」という制約を書き下しています。
 
 \begin{lstlisting}[caption=SML\#の多相レコード,label=code:poly-record]
 # fun f x = #name x;
@@ -1477,21 +1491,21 @@ utop[1]> f (object method name = "joe" method age = 21 end);;
 @/val it = ["12","3.14","ruri"] : string list/@
 \end{lstlisting}
 
-この例ではまず\lstinline{datatype}宣言により新しい型\lstinline{t}を作っています。
-これの書き方は\lstinline{datatype <パラメータ> 型名 = コンストラクタ名１ of 要素の型１ | コンストラクタ名２ of 要素の型２ | ...}」です。
-\textbf{<パラメータ>}の部分はオプションで、\lstinline{list}のように型の一部をパラメータ化するために用います。
+この例ではまず\prog{datatype}宣言により新しい型\prog{t}を作っています。
+これの書き方は\\\prog{datatype <PARAM> @@typ@ = @@C1@ of @@typ1@ | @@C2@ of @@typ2@ | ...}」です。
+\prog{<PARAM>}の部分はオプションで、\prog{list}のように型の一部をパラメータ化するために用います。
 宣言の際に列挙した、ヴァリアントを作るための関数(上の例ではA,B,Cのこと)をコンストラクタと呼びます。
-またヴァリアントの要素の型がunit型である場合、これの\lstinline{of}以降を省略できます。
+またヴァリアントの要素の型がunit型である場合、これの\prog{of}以降を省略できます。
 
-\lstinline{t}型の要素を作る方法は「コンストラクタ 要素」と並べるだけです。
+\prog{t}型の要素を作る方法は「コンストラクタ 要素」と並べるだけです。
 コンストラクタは実は関数なので、ただの関数適用です。
-例えばソースコード\ref{code:variants}では\lstinline{A 12}と並べることで\lstinline{t}型の値を作っています。
+例えばソースコード\ref{code:variants}では\prog{A 12}と並べることで\prog{t}型の値を作っています。
 
 次にヴァリアントを分解するためにパターンマッチを用います。
-上の例で\lstinline{toString}関数の定義を見て下さい。
-この定義で、\lstinline{case t of A i => ...}の部分が
-もし引数が\lstinline{A}のケースであった場合の処理です。
-\lstinline{t}が\lstinline{A}のケースの場合、中身を\lstinline{i}と名前をつけて処理を行います
+上の例で\prog{toString}関数の定義を見て下さい。
+この定義で、\prog{case t of A i => ...}の部分が
+もし引数が\prog{A}のケースであった場合の処理です。
+\prog{t}が\prog{A}のケースの場合、中身を\prog{i}と名前をつけて処理を行います
 （リストを扱った時と変わりありません）。
 
 ヴァリアントは、「\textbf{要素にラベルがついたもの}」です。
@@ -1502,12 +1516,12 @@ CやJavaのEnumとは扱いが全く異なります。
 ヴァリアントはあまりML系言語以外には見られない機能です。
 これができると何故嬉しいのか詳しく見て行きましょう。
 ソースコード\ref{code:option}では、
-標準ライブラリで提供されている\lstinline{'a option}型を使用しています。
-\lstinline{option}は\lstinline{list}と同様にそれ単体では型ではなく、
-\lstinline{int option}や\lstinline{string option}などパラメータを持つことで
+標準ライブラリで提供されている\prog{'a option}型を使用しています。
+\prog{option}は\prog{list}と同様にそれ単体では型ではなく、
+\prog{int option}や\prog{string option}などパラメータを持つことで
 初めて型として扱われます。
-型パラメータを持つヴァリアントを宣言するためには、\lstinline{type 'a t = C of 'a}
-などと\lstinline{type}の後にパラメータを書きます。
+型パラメータを持つヴァリアントを宣言するためには、\prog{type 'a t = C of 'a}
+などと\prog{type}の後にパラメータを書きます。
 
 \begin{lstlisting}[caption=オプション型,label=code:option]
 (* option型の定義は
@@ -1525,27 +1539,27 @@ List.find (fn x => x mod 3 = 0) l;
 @/val it = NONE : int option/@
 \end{lstlisting}
 
-上の例ではまず\lstinline{int list}型の変数\lstinline{l}をつくり、
-\lstinline{List.find: ('a -> bool) -> 'a list -> 'a option}に
+上の例ではまず\prog{int list}型の変数\prog{l}をつくり、
+\prog{List.find: ('a -> bool) -> 'a list -> 'a option}に
 匿名関数とこのリストを渡しています。
-\lstinline{'a option}型の要素は２つあります。一つは要素が存在しないことを表す\lstinline{NONE}、
-もうひとつは要素が存在することを表す\lstinline{SOME of 'a}です。
-\lstinline{List.find}を使った最初の例では、３で割ってあまりが0になる最初の要素を取り出していますが、
-これはこのような要素が\lstinline{l}に存在するので\lstinline{SOME 3}を返しています。
+\prog{'a option}型の要素は２つあります。一つは要素が存在しないことを表す\prog{NONE}、
+もうひとつは要素が存在することを表す\prog{SOME of 'a}です。
+\prog{List.find}を使った最初の例では、３で割ってあまりが0になる最初の要素を取り出していますが、
+これはこのような要素が\prog{l}に存在するので\prog{SOME 3}を返しています。
 一方でその下の例では、100以上の要素を探して取り出していますが、
-そのような要素は存在しないので、存在しなかったことを表すために\lstinline{NONE}が返ってきます。
+そのような要素は存在しないので、存在しなかったことを表すために\prog{NONE}が返ってきます。
 
 このように、計算が失敗するかもしれないという事を手軽に、さらに型にもそれを表明することが出来ます。
-プログラマは例えば\lstinline{List.find}の返り値部分を見て\lstinline{'a}ではなく\lstinline{'a option}
+プログラマは例えば\prog{List.find}の返り値部分を見て\prog{'a}ではなく\prog{'a option}
 であることを見れば、ああ、この処理というのは失敗する場合もあるんだなということが分かります。
-また上の例で\lstinline{int option}型の値を使うためには、必ずパターンマッチによりSOMEのケースとNONE
+また上の例で\prog{int option}型の値を使うためには、必ずパターンマッチによりSOMEのケースとNONE
 のケースを記述しなければなりません。
 ここが重要なのですが、書き漏らしたケースがあれば「{\bfseries コンパイラが警告します}」。
 ここが他の失敗をエンコードする手段と全く違うところです。
 失敗の場合のケースを書き漏しを機械がチェック出来るという部分がオプション型の良い部分です。
 
-オプション型以外にも、例えば成功した時\lstinline{'a}型の要素を返し、失敗した時\lstinline{'b}型の要素を返す
-\lstinline{('a, 'b) result}型のようなものも考えられます。
+オプション型以外にも、例えば成功した時\prog{'a}型の要素を返し、失敗した時\prog{'b}型の要素を返す
+\prog{('a, 'b) result}型のようなものも考えられます。
 このような構成要素をユーザが作れる、それがヴァリアントの嬉しい部分です。
 
 \begin{itembox}[l]{コラム：ヴァリアント無しで失敗をエンコードするには}
@@ -1561,8 +1575,8 @@ List.find (fn x => x mod 3 = 0) l;
 1.のnullを用いる場合だと、コードのあちこちでnullチェックが必要になります。
 これの悲惨さは私よりも職業プログラマの皆様のほうがよくご存知だと思います。
 
-2.の失敗した時に例外を投げることにして、\lstinline{List.find}を例にすると返り値を
-\lstinline{'a option}ではなく\lstinline{'a}にしてしまうのはnullを用いるよりはあり得る設計です。
+2.の失敗した時に例外を投げることにして、\prog{List.find}を例にすると返り値を
+\prog{'a option}ではなく\prog{'a}にしてしまうのはnullを用いるよりはあり得る設計です。
 しかし、例外の存在はプログラムを危険にします。
 プログラマが例外をキャッチすることを忘れれば、
 プログラムはキャッチされない例外によって終了してしまいます。
@@ -1579,11 +1593,11 @@ Javaのこの実装では冗長なたくさんのコードにより実装され�
 
 コンストラクタの要素として、自分自身と同じ型の要素を持つようなヴァリアント型のことを
 再帰的ヴァリアント型と呼びましょう。これはすでに登場しています。
-リストの定義を考えてみましょう。リストの定義は\lstinline{List}モジュールをオープンしてみると
+リストの定義を考えてみましょう。リストの定義は\prog{List}モジュールをオープンしてみると
 プリントされます。
 モジュールをオープンする、とはモジュールの関数や変数にはドット記号をつけてアクセスしていましたが、
 モジュール名を省略できるようになります。
-例えば\lstinline{open List;}のあとでは\lstinline{List.find}ではなく\lstinline{find}とかければ
+例えば\prog{open List;}のあとでは\prog{List.find}ではなく\prog{find}とかければ
 この関数を指すようになります。
 
 \begin{lstlisting}[caption=リストの定義を確認する,label=code:open-list]
@@ -1597,19 +1611,19 @@ Javaのこの実装では冗長なたくさんのコードにより実装され�
 @/val it = fn : 'a * 'a list -> 'a list/@
 \end{lstlisting}
 
-これを見るとリストは\lstinline{datatype 'a list = :: of 'a * 'a list | nil}
-と定義されていますね。リストというのはコンス(\lstinline{::})の場合と空リストの場合から成り立っています。
-\lstinline{::}の場合の要素の部分を見てみると、
-今\lstinline{'a list}が存在しないから作ろうとしているのに、既に\lstinline{'a list}が存在しているかのように
+これを見るとリストは\prog{datatype 'a list = :: of 'a * 'a list | nil}
+と定義されていますね。リストというのはコンス(\prog{::})の場合と空リストの場合から成り立っています。
+\prog{::}の場合の要素の部分を見てみると、
+今\prog{'a list}が存在しないから作ろうとしているのに、既に\prog{'a list}が存在しているかのように
 これを使っています。再帰の構造をしていますね。\\
-ちなみにコンスのケースで要素の型に含まれる型変数が\lstinline{'b}ではなく\lstinline{'a}だということも
-重要な情報です。\lstinline{'a list}の要素の型はすべて\lstinline{'a}型である、
+ちなみにコンスのケースで要素の型に含まれる型変数が\prog{'b}ではなく\prog{'a}だということも
+重要な情報です。\prog{'a list}の要素の型はすべて\prog{'a}型である、
 他の型は含まれないということを表明しているわけです。
-\lstinline{'a}以外の型変数、例えば
-\lstinline{'b}を使ってしまうとそんなものはバインドされない！と怒られてしまうわけですが。
+\prog{'a}以外の型変数、例えば
+\prog{'b}を使ってしまうとそんなものはバインドされない！と怒られてしまうわけですが。
 
 % 再帰的ヴァリアントを用いれば、木構造を簡単に作ることが出来ます。\\
-% ２分木の定義は\lstinline{datatype 'a tree = LEAF | NODE of 'a tree * 'a * 'a tree} と
+% ２分木の定義は\prog{datatype 'a tree = LEAF | NODE of 'a tree * 'a * 'a tree} と
 % １行で済みます！
 % オブジェクトを用いた場合の実装を想像してみて下さい。私は気がめいります。
 
@@ -1653,8 +1667,8 @@ fun printDict f dict = print (toString f dict)
 %   printDict (fn s => fn e => "<" ^ s ^ ", " ^ Int.toString e ^ ">") dict
 
 気をつける点は多相的なイコールを多用していることです。
-イコールの型付けは特殊で、\lstinline{''a * ''a -> bool}という型を持ちます
-\footnote{ちなみに\lstinline{''a}は特殊な型変数で、浮動小数点数型や関数型に単一化できない型変数です。
+イコールの型付けは特殊で、\prog{''a * ''a -> bool}という型を持ちます
+\footnote{ちなみに\prog{''a}は特殊な型変数で、浮動小数点数型や関数型に単一化できない型変数です。
 浮動小数点数の等しさの判定はしちゃいけないし、関数同士の比較は普通は出来ませんよね。}。
 色々な型に対して等しいかどうかを判定できる、ユーザが書けない関数です。
 
@@ -1667,7 +1681,7 @@ fun printDict f dict = print (toString f dict)
 @/val it = false : bool/@
 \end{lstlisting}
 
-また\lstinline{string}型の比較を行う\lstinline{String.<}関数を利用しています。
+また\prog{string}型の比較を行う\prog{String.<}関数を利用しています。
 これはinfix宣言されてないので普通の関数と同じスタイルで関数適用しています。
 また、一部対話環境がネストが深かったりデータが長すぎて省略している部分がありますね。
 
@@ -1700,11 +1714,11 @@ fun printDict f dict = print (toString f dict)
 ソースコード\ref{code:use-dict}でパイプライン演算子を定義して使用しました。
 これは関数なのですが一種の制御構造みたいな役割を果たす、多用される演算子なので紹介します。
 
-\lstinline{fun op |> (x, f) = f x}がパイプライン演算子\lstinline{|>}の定義です。
+\prog{fun op |> (x, f) = f x}がパイプライン演算子\prog{|>}の定義です。
 次の行のinfix宣言により中置演算子として扱われます（結合の強さは弱い１を選びました）。
-定義を見ると、ふつう\lstinline{f x}とかかれる関数適用を逆順に書くためのオペレータなのだということが分かります。
+定義を見ると、ふつう\prog{f x}とかかれる関数適用を逆順に書くためのオペレータなのだということが分かります。
 これでパイプライン演算子がどのように働くのかというと、例えば
-\lstinline{x |> f |> g |> h}というコードは\lstinline{h (g (f x))}というコードと
+\prog{x |> f |> g |> h}というコードは\prog{h (g (f x))}というコードと
 同じ挙動をします。\\
 パイプライン演算子が並んでいる部分は、
 計算した結果を次のパイプラインの末尾の部分に渡して処理して、それをさらに次のパイプラインに
@@ -1733,7 +1747,7 @@ SMLではヴァリアントはすべて予め宣言されなければ使えま�
 他のヴァリアント型のコンストラクタの名前と同じに出来ませんでした。
 % TODO: 上で言及する？
 OCaml\cite{ocaml}には宣言せずに使える、多相ヴァリアントというものがあります。
-多相ヴァリアントは\lstinline{`}が最初につき、大文字で始まります。例を見てみましょう。
+多相ヴァリアントは\prog{`}が最初につき、大文字で始まります。例を見てみましょう。
 
 \begin{lstlisting}[caption=多相ヴァリアント,label=code:poly-varinat]
 utop[0]> let f x = match x with `A y -> y | `B -> 2 | _ -> 3;;
@@ -1743,20 +1757,20 @@ utop[25]> let g x = match x with `A y -> y | `B -> 2;;
 @/val g : [< `A of int | `B ] -> int = <fun>/@
 \end{lstlisting}
 
-多相ヴァリアントの型は少し特殊です。まず関数\lstinline{f}の型を見てみると、
-\lstinline{[> `A of int | `B ]}というのは多相ヴァリアントを表す型で、
-少なくとも\lstinline{`A of int}と\lstinline{`B}というヴァリアントを含む
+多相ヴァリアントの型は少し特殊です。まず関数\prog{f}の型を見てみると、
+\prog{[> `A of int | `B ]}というのは多相ヴァリアントを表す型で、
+少なくとも\prog{`A of int}と\prog{`B}というヴァリアントを含む
 多相ヴァリアント型ということを表しています。
-関数\lstinline{g}に現れる\lstinline{[< `A of int | `B ]}はその逆で、
-高々\lstinline{`A of int}か\lstinline{`B}というヴァリアントしか含まない
+関数\prog{g}に現れる\prog{[< `A of int | `B ]}はその逆で、
+高々\prog{`A of int}か\prog{`B}というヴァリアントしか含まない
 多相ヴァリアント型だという事を表しています。
 型の大小記号(\prog{>}と\prog{<})が異なっている部分に注目して下さい。
 
-ちなみに\lstinline{let f x = if x = 0 then `A "hoge" else `A 13}
+ちなみに\prog{let f x = if x = 0 then `A "hoge" else `A 13}
 のように多相ヴァリアントの要素の型が異なるものを混ぜることは出来ません。
 
 多相ヴァリアントを解説すると沢山記事が書けてしまうのですが、
-面白い挙動の一例として\lstinline{`Cons}と\lstinline{`Nil}を用いてリスト構造を作ってみます。
+面白い挙動の一例として\prog{`Cons}と\prog{`Nil}を用いてリスト構造を作ってみます。
 
 \begin{lstlisting}[caption=多相ヴァリアントを用いたリスト構造(ocamlコード)]
 (* リスト構造を手で作ってみる int list以上に型に長さなど情報がある！ *)
@@ -1794,19 +1808,20 @@ utop[25]> let g x = match x with `A y -> y | `B -> 2;;
 \end{itembox}
 
 \section{例外}
+% TODO: メタ変数の使い方が混乱を招かないか
 
 SMLには他の言語と同じような例外機構があります。
-例外の作成には \lstinline{exception 例外名 <of 型>}、
-例外を投げるときには \lstinline{raise 例外名}、
+例外の作成には \prog{exception @@exn@ of @@typ@>}、
+例外を投げるときには \prog{raise @@exn@}、
 それをキャッチするためには
-\lstinline{ 式 handle パターン1 => 式1 | パターン2 => 式2 | ...}
+\prog{@@e@ handle @@pat1@ => @@e1@ | @@pat2@ => @@e2@ | ...}
 という構文を用います。
 
 例外の型付けは少し特別です。
-作られた例外はすべて\lstinline{exn}型を持ちます。
+作られた例外はすべて\prog{exn}型を持ちます。
 \footnote{例外型を悪用（？）すると面白いことが出来、
 実行時に型によって分岐するプログラムなんかも書けてしまいます\cite{use-exn}！}
-また\lstinline{raise 例外}は多相型\lstinline{'a}を持ちます。
+また\prog{raise @@exn@}は多相型\prog{'a}を持ちます。
 例外が投げられれば処理を続けることもないので、任意の型をもっても問題ありません。
 
 \begin{minipage}[htb]{0.4\linewidth}
@@ -1840,7 +1855,7 @@ SMLにおける副作用のある計算を行う仕組みを見て行きまし�
 他の言事対して変わらないのでさらっといきます。
 
 主にここで出てくるのは、返り値にunit型の値を返す関数や式です。
-unit型はヴァリアントで、値が\lstinline{()}１つしかない型です。
+unit型はヴァリアントで、値が\prog{()}１つしかない型です。
 unit型はC言語のvoid型のように、プリントや
 破壊的代入など副作用を主に期待している処理が返すものがない時に返す事が殆どです。
 型を解釈するときに、返り値がunit型になっていれば
@@ -1858,7 +1873,7 @@ unit型はC言語のvoid型のように、プリントや
 \subsection{逐次実行}
 
 順番に処理を実行していくことを逐次実行と呼びます。
-SMLの逐次実行は「\lstinline{(式１; 式２; ...)}」という構文です。
+SMLの逐次実行は\prog{(@@e1@; @@e2@; ...)}という構文です。
 逐次実行の式は式１を評価して、その返り値を捨てて次に式２を評価する、というのを続け
 最後に評価した値を返します。必ず括弧で括らないと行けないことに気をつけて下さい。
 
@@ -1870,9 +1885,9 @@ SMLの逐次実行は「\lstinline{(式１; 式２; ...)}」という構文で�
 @/val it = () : unit/@
 \end{lstlisting}
 
-逐次実行はlet式の\lstinline{let}から\lstinline{in}
-までの宣言列でも\lstinline{val () = ...}を用いて
-行うことが出来ます。また\lstinline{in}から\lstinline{end}までに逐次実行を書く場合のみ
+逐次実行はlet式の\prog{let}から\prog{in}
+までの宣言列でも\prog{val () = ...}を用いて
+行うことが出来ます。また\prog{in}から\prog{end}までに逐次実行を書く場合のみ
 括弧が必要ありません。
 
 \begin{lstlisting}
@@ -1911,18 +1926,18 @@ SMLでは変数は基本的にイミュータブルでした。
 @/val it = (1,1) : int * int/@
 \end{lstlisting}
 
-\lstinline{ref 0}という値は、
-まさにメモリー上にセルを確保して\lstinline{0}を書き込むプログラムです。
-\lstinline{val r = ref 0}という文で、そのポインタを\lstinline{r}に束縛していると思って下さい。
-\lstinline{val r' = r}はポインタのコピーです。
-そのため\lstinline{r'}が指す先は\lstinline{r}と共通です。
-\lstinline{r}を書き換えれば、\lstinline{r'}の指す先の内容もアップデートされます。
+\prog{ref 0}という値は、
+まさにメモリー上にセルを確保して\prog{0}を書き込むプログラムです。
+\prog{val r = ref 0}という文で、そのポインタを\prog{r}に束縛していると思って下さい。
+\prog{val r' = r}はポインタのコピーです。
+そのため\prog{r'}が指す先は\prog{r}と共通です。
+\prog{r}を書き換えれば、\prog{r'}の指す先の内容もアップデートされます。
 
 \subsection{繰り返し}
 
 あまりSMLを書いていると使いたくなる事はないのですが、一応while式が存在します。
-while式はunitを返します。大体は\lstinline{List.app}や\lstinline{List.appi}、
-\lstinline{Array.appi}などで済みます。
+while式はunitを返します。大体は\prog{List.app}や\prog{List.appi}、
+\prog{Array.appi}などで済みます。
 
 \begin{lstlisting}[caption=while式,label=code:while]
 - fun incr r = r := !r + 1;
@@ -1939,7 +1954,7 @@ while式はunitを返します。大体は\lstinline{List.app}や\lstinline{List
 
 \subsection{配列}
 
-配列は多相的で\lstinline{'a array}型と表現されます。
+配列は多相的で\prog{'a array}型と表現されます。
 配列を扱うための特別な構文は存在せず、
 すべて関数を通してアクセスやアップデートをします。
 Arrayモジュールの詳細はマニュアルを見ましょう\cite{sml-libs}。
@@ -1991,11 +2006,11 @@ val () = polyRef := (fn n => n * n)
 val str = (!polyRef) "This operation is illegal !"
 \end{lstlisting}
 
-\lstinline{polyRef}がもし多相的な型がつくとすると、一度決まった型が変わることはないので、
-当然型変数に\lstinline{int}を代入しても（２行目）\lstinline{string}を代入しても（３行目）問題ないはずです。
-しかし３行目で\lstinline{!polyRef}の中身は\lstinline{int -> int}の関数になっており、
+\prog{polyRef}がもし多相的な型がつくとすると、一度決まった型が変わることはないので、
+当然型変数に\prog{int}を代入しても（２行目）\prog{string}を代入しても（３行目）問題ないはずです。
+しかし３行目で\prog{!polyRef}の中身は\prog{int -> int}の関数になっており、
 このコードは不正な動作をしてしまいます。
-原因は\lstinline{polyRef}に多相的な型がつくことです。
+原因は\prog{polyRef}に多相的な型がつくことです。
 またこのような事が起こる事が分かると、関数適用の結果も多相的になってはいけないことが分かります。
 コンストラクタの適用は副作用は起こし得ないので許されていますが関数適用には副作用があるかもしれないため
 それの返り値には多相型をもたせてはいけないのです。
@@ -2009,13 +2024,13 @@ val str = (!polyRef) "This operation is illegal !"
 @/val it = ref NONE : ?.X1 option ref                             /@
 \end{lstlisting}
 
-実用的には、例えば\lstinline{val duplicate = List.map (fn x => (x, x))}
+実用的には、例えば\prog{val duplicate = List.map (fn x => (x, x))}
 のようなケースで多相的になってほしいにも関わらず多相的にならない場合があります。
 多くの場合、$\eta$展開と呼ばれる手法で解決できます。この手法は、先程の例ならば
-\lstinline{fun duplicate l = List.map (fn x => (x, x)) l}
+\prog{fun duplicate l = List.map (fn x => (x, x)) l}
 と右辺を関数にしてしまうことです
 （fun文はval文のシンタックスシュガーで、
-デシュガーすると\lstinline{val duplicate = fn l => ...}になります）。
+デシュガーすると\prog{val duplicate = fn l => ...}になります）。
 $\eta$展開についてはラムダ計算の用語なので深追いしませんが、多相的にならないと困った時には
 少し表現を変えるだけで多相的な型がつくことが多いということは覚えておいて下さい。
 
@@ -2090,13 +2105,13 @@ val l = M3.map M.id [1,2,3]
 \end{lstlisting}
 
 モジュール定義をオープンして定義をトップレベルに展開するためにはopen文を用います。
-\lstinline{val r2 = ...}の部分ではモジュール\lstinline{M}をオープンして
-\lstinline{M.}という記述を省略でるようになります。
+\prog{val r2 = ...}の部分ではモジュール\prog{M}をオープンして
+\prog{M.}という記述を省略でるようになります。
 モジュール名が長い場合や、トップレベルに見えているモジュールを上書きする場合に有効です。
 例えば強化標準ライブラリを作る際に、ソースコード\ref{code:case-of-open}のように、
-モジュールを定義しておいて、使う部分でモジュール\lstinline{PoweredStd}をオープンすれば
-既にある\lstinline{List}モジュールを上書きして\lstinline{List}という記述は
-\lstinline{PoweredStd.List}を指すようになります。
+モジュールを定義しておいて、使う部分でモジュール\prog{PoweredStd}をオープンすれば
+既にある\prog{List}モジュールを上書きして\prog{List}という記述は
+\prog{PoweredStd.List}を指すようになります。
 これはプログラムの挙動を一気に変えるときにとても便利です。
 
 \begin{lstlisting}[caption=openの使いドコロ,label=code:case-of-open]
@@ -2118,7 +2133,7 @@ end
 
 ソースコード\ref{code:dict}で２分探索木を用いた辞書の定義を行いましたが、
 それをモジュール内で定義した時のシグニチャを定義してみましょう。
-ソースコード\ref{code:signature}を見て下さい(\lstinline{'a dict}を\lstinline{'a t}に名前を変えています)。
+ソースコード\ref{code:signature}を見て下さい(\prog{'a dict}を\prog{'a t}に名前を変えています)。
 
 \begin{lstlisting}[caption=シグニチャの定義,label=code:signature]
 (* シグニチャの定義は signature ID = sig ... end で行う *)
@@ -2131,13 +2146,13 @@ signature DICT = sig
 end
 \end{lstlisting}
 
-シグニチャ宣言の文法は\lstinline{signature モジュール名 = sig 宣言 end}です。
-シグニチャに含まれる変数の宣言には\lstinline{val 変数名 : 型}、
-ヴァリアント型には普通のトップレベルでの定義のように\lstinline{datatype 型名 = 定義}を書き、
-型隠蔽(後述)のためには上の定義のように\lstinline{type <パラメータ> 型名}を宣言します。
-型隠蔽で\lstinline{type}を用いる場合には定義を書かないところに注意して下さい。
+シグニチャ宣言の文法は\prog{signature @@S@ = sig @@dec1@ @@dec2@ ... end}です。
+シグニチャに含まれる変数の宣言には\prog{val VAR : TYPE}、
+ヴァリアント型には普通のトップレベルでの定義のように\prog{datatype @@typ@ = ...}を書き、
+型隠蔽(後述)のためには上の定義のように\prog{type <PARAM> @@typ@}を宣言します。
+型隠蔽で\prog{type}を用いる場合には定義を書かないところに注意して下さい。
 
-\begin{lstlisting}[caption=モジュール\lstinline{Dict}にシグニチャを付ける,label=code:dict-with-sig]
+\begin{lstlisting}[caption=モジュール\prog{Dict}にシグニチャを付ける,label=code:dict-with-sig]
 structure Dict :> DICT = struct
   datatype 'a t =
     LEAF
@@ -2164,21 +2179,21 @@ structure Dict :> DICT = struct
 end
 \end{lstlisting}
 
-ソースコード\ref{code:dict-with-sig}では、上で定義したシグニチャ\lstinline{DICT}の制約を
-\lstinline{Dict}モジュールに\lstinline{Dict :> DICT}という記述によって課しています。
+ソースコード\ref{code:dict-with-sig}では、上で定義したシグニチャ\prog{DICT}の制約を
+\prog{Dict}モジュールに\prog{Dict :> DICT}という記述によって課しています。
 これがなければ何の制約もないただのモジュール定義になります。
-シグニチャ\lstinline{DICT}の\lstinline{'a t}型の宣言を見ると\lstinline{type}を用いており
+シグニチャ\prog{DICT}の\prog{'a t}型の宣言を見ると\prog{type}を用いており
 定義が書いてないため、これの詳細にアクセスできなくしています。
-またシグニチャ\lstinline{DICT}には関数\lstinline{toString}のことは
-書いてないので、シグニチャ\lstinline{DICT}の制約が課されたモジュール\lstinline{Dict}では
+またシグニチャ\prog{DICT}には関数\prog{toString}のことは
+書いてないので、シグニチャ\prog{DICT}の制約が課されたモジュール\prog{Dict}では
 この関数にアクセスできなくしています。ソースコード\ref{code:use-dict-with-sig}を見て下さい。
 
-ちなみにここでシグニチャ名をすべて大文字で\lstinline{DICT}、モジュール名を\lstinline{Dict}
+ちなみにここでシグニチャ名をすべて大文字で\prog{DICT}、モジュール名を\prog{Dict}
 としていますが別にこのような名前でなければならない理由はありません。ただ、SML/NJの習慣では
 モジュール名は最初の文字を大文字にして他は小文字、シグニチャ名には全て大文字を用いるようです。
 ただモジュールとシグニチャで関数などの名前は一致してなければなりません。
 
-\begin{lstlisting}[caption=\lstinline{Dict}を使おう,label=code:use-dict-with-sig]
+\begin{lstlisting}[caption=\prog{Dict}を使おう,label=code:use-dict-with-sig]
 fun op |> (x, f) = f x
 infix 1 |>
 
@@ -2193,19 +2208,19 @@ val str = Dict.toString dict
 @/stdIn:44.11-44.24 Error: unbound variable or constructor: toString in path Dict.toString/@
 \end{lstlisting}
 
-もしモジュール\lstinline{Dict}に\lstinline{printDict}がない時はどうなるでしょうか？
+もしモジュール\prog{Dict}に\prog{printDict}がない時はどうなるでしょうか？
 これの定義を消して対話環境に入力してみると、
-\lstinline{@/stdIn:45.1-67.4 Error: unmatched value specification: printDict/@}
-と表示され、関数\lstinline{printDict}がモジュールの中にないぞ！と怒られてしまいます。
+\prog{@/stdIn:45.1-67.4 Error: unmatched value specification: printDict/@}
+と表示され、関数\prog{printDict}がモジュールの中にないぞ！と怒られてしまいます。
 
 一般にシグニチャによる型の隠蔽はどんどんやるべきです。その理由は
 \begin{itemize}
 \item コードの安全性のため\\
-  \lstinline{'a Dict.t}型の値のヴァリアントに直接触れると
+  \prog{'a Dict.t}型の値のヴァリアントに直接触れると
   ２分探索木になっていない木もユーザが作れてしまいます。
   このような事を禁止できれば安全性は高まります。
 \item モジュール定義の柔軟性のため\\
-  \lstinline{'a Dict.t}型の定義を非公開にしておけば、
+  \prog{'a Dict.t}型の定義を非公開にしておけば、
 これの内部実装に依存したコードが書けなくなります。
 あとで内部実装を配列・ハッシュテーブルを用いたより効率の良いものに交換することが容易になります。
 \end{itemize}
@@ -2213,8 +2228,8 @@ val str = Dict.toString dict
 ソースコード\ref{code:use-dict-with-sig}を見ると、辞書の実装が２分探索木であることに
 依存している記述はどこにもありません。だとすれば内部の実装が例えばリストでも良いはずです。
 ソースコード\ref{code:list-dict}ではリストを用いた辞書の定義を行いました。
-これもシグニチャ\lstinline{DICT}の誓約を満たします。
-リストの探索ではリストの探索にはリストの長さ\lstinline{n}に対して線形時間かかりますが、
+これもシグニチャ\prog{DICT}の誓約を満たします。
+リストの探索ではリストの探索にはリストの長さ\prog{n}に対して線形時間かかりますが、
 ２分探索木による実装では対数時間で済みます。しかし２分木による実装のほうがコード量も多いし
 大変であれば、まずはリストを使って実装して後で差し替えればいいですよね。
 このようなことが容易に出来ることをシグニチャによる実装の隠蔽により保証できます。
@@ -2233,7 +2248,7 @@ end
 \end{lstlisting}
 
 もしシグニチャ制約は課すけども、型情報を一部公開したかったらばwhere type文を用いることが出来ます。
-例えば\lstinline{structure Dict2 :> DICT where type 'a t = (string * 'a) list = ...}
+例えば\prog{structure Dict2 :> DICT where type 'a t = (string * 'a) list = ...}
 と書くとここで書いた定義が外部に公開されます。
 
 \subsection{ファンクタ(functor)}
@@ -2241,20 +2256,20 @@ end
 ファンクタは定義（の列）を受け取ってモジュールを返す関数のようなものです。
 例として２分探索木を提供するファンクタを定義してみましょう。
 ２分探索木ではその性質上ノードのラベル同士で大小判定出来ないといけません。
-SMLには\lstinline{compare: 'a -> 'a -> bool}の型を持つ関数はイコールしか存在しないため、
-多相的な\lstinline{'a tree}のような型の値は作れませんでした。
+SMLには\prog{compare: 'a -> 'a -> bool}の型を持つ関数はイコールしか存在しないため、
+多相的な\prog{'a tree}のような型の値は作れませんでした。
 
-そこで、ここでいう\lstinline{'a}に相当する型とそれの大小判定関数を渡してやり、
+そこで、ここでいう\prog{'a}に相当する型とそれの大小判定関数を渡してやり、
 渡された型が格納できる２分探索木を扱うモジュールを返すファンタを定義してみましょう。
-ファンタは\lstinline{functor ファンクタ名 (宣言の列) = struct ... end}という構文により定義されます。
+ファンタは\prog{functor @@F@ (@@dec1@ @@dec2@ ...) = struct (@@dec3@ @@dec4@ ...) end}という構文により定義されます。
 宣言の列としてよく用いられるのは以下のとおりです。
 
 \begin{itemize}
-\item \lstinline{val 変数名 : 型}
-\item \lstinline{type 型名}
-\item \lstinline{datatype 型名 = ...}
-\item \lstinline{structure モジュール名 : シグニチャ名}
-\item \lstinline{exception 例外名 of 型名}
+\item \prog{val @@x@ : @@typ@}
+\item \prog{type @@typ@}
+\item \prog{datatype @@typ@ = ...}
+\item \prog{structure @@M@ : @@S@}
+\item \prog{exception @@exn@ of @@typ@}
 \end{itemize}
 \begin{lstlisting}[caption=ファンクタの例]
 (* ２分探索木を返すファンタBinTreeの定義 *)
@@ -2287,7 +2302,7 @@ val tree = let open StringTree in insert "3" LEAF |> insert "1" |> insert "2" en
 @/val it = (true,false) : bool * bool/@
 \end{lstlisting}
 
-ここではファンクタが返すモジュール自体の\lstinline{tree}型の実装は隠蔽されていませんが、
+ここではファンクタが返すモジュール自体の\prog{tree}型の実装は隠蔽されていませんが、
 ファンクタがモジュールにもシグニチャの制約を課すことが出来き、型隠蔽を行うことも出来ます。
 
 \begin{minipage}[htb]{0.45\textwidth}
@@ -2313,11 +2328,11 @@ end
 \end{lstlisting}
 \end{minipage}
 
-ソースコード\ref{code:bin-tree-with-sig}では、ファンクタ\lstinline{BinTree}を再定義しています。
-定義は一緒なのですが、増えた部分は\lstinline{:> BINTREE where type elem=elem}の部分です。
-\lstinline{:> BINTREE}はファンクタが返すモジュールのシグニチャ制約で、
-\lstinline{where}以降はシグニチャ制約によって隠す型\lstinline{elem}を公開することを宣言しています。
-where type文がなければ型\lstinline{elem}の実装を隠してしまい、このファンクタが作るモジュールの
+ソースコード\ref{code:bin-tree-with-sig}では、ファンクタ\prog{BinTree}を再定義しています。
+定義は一緒なのですが、増えた部分は\prog{:> BINTREE where type elem=elem}の部分です。
+\prog{:> BINTREE}はファンクタが返すモジュールのシグニチャ制約で、
+\prog{where}以降はシグニチャ制約によって隠す型\prog{elem}を公開することを宣言しています。
+where type文がなければ型\prog{elem}の実装を隠してしまい、このファンクタが作るモジュールの
 関数の使い道が一切なくなってしまいます。
 
 \begin{itembox}[l]{コラム：第一級モジュール}
@@ -2330,21 +2345,23 @@ OCaml\cite{ocaml}ではモジュールを動的に作ることが出来ます。
 \footnote{\url{http://ocaml.jp/refman/ch07s14.html}}、ざっくり概要だけ説明します。
 以下のコードのポイントは、モジュールを普通の値として使うためにpack
 している部分と、packされたモジュールをunpackしている部分があることです。
-packされたモジュール(小文字の\lstinline{m})は普通の値のように使えますが
+packされたモジュール(小文字の\prog{m})は普通の値のように使えますが
 モジュールの要素に直接アクセスできません。
-unpackされた普通のモジュール(大文字の\lstinline{M})には要素にアクセスできますが
+unpackされた普通のモジュール(大文字の\prog{M})には要素にアクセスできますが
 モジュール自体は値ではないので操作するためにpackする必要があります。
-そのpackにあたるのが\lstinline{(module M : S)}で、unpackにあたるのが\lstinline{val m : S}です。
+そのpackにあたるのが\prog{(module M : S)}で、unpackにあたるのが\prog{val m : S}です。
 これが何故必要なのかは、型システム入門などで存在型について調べてみて下さい。
 
 \begin{lstlisting}[caption=第一級モジュール モジュールを作る関数と使う関数]
-module type S = sig type t val init : t val to_string : t -> string end;;
+module type S = sig type t;; val init : t;; val to_string : t -> string end;;
 
 (* シグニチャ制約Sを満たすモジュールを作って返す関数 *)
-let make_mod x = let module M = struct
-  type t = int
-  let init = x
-  let to_string t = string_of_int t end in (module M : S);;
+let make_mod x =
+  let module M = struct
+    type t = int
+    let init = x
+    let to_string t = string_of_int t end
+  in (module M : S);;
 @/val make_mod : int -> (module S) = <fun>/@
 
 (* シグニチャ制約Sを満たすモジュールを受け取ってそれを使う関数 *)
@@ -2352,8 +2369,6 @@ let use_mod m = let module M = (val m : S) in M.to_string M.init;;
 @/val use_mod : (module S) -> string = <fun>/@
 \end{lstlisting}
 \end{itembox}
-
-\part{プログラムの例}
 
 \begin{thebibliography}{9}
   \bibitem{sml-libs} The Standard ML Basis Library \\
