@@ -5,7 +5,7 @@ LATEXFLAGS = --kanji=utf8 -interaction=nonstopmode -halt-on-error
 ## LATEX = uplatex
 ## LATEXFLAGS = -interaction=nonstopmode -halt-on-error
 BIBTEX = pbibtex --kanji=utf8
-DVIPDFM = dvipdfmx -f fonts.map
+DVIPDFM = dvipdfmx -f ptex-ipaex.map
 DVIPDFMFLAGS = -p a4
 
 # 変更を監視するファイル
