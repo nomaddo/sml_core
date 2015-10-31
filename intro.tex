@@ -11,6 +11,8 @@
 \usepackage{geometry}
 \geometry{left=25mm,right=25mm,top=20mm,bottom=20mm}
 
+\hypersetup{unicode=true}% しおりの文字化け対策
+
 % \usepackage{courier}
 %\usepackage{DejaVuSansMono}
 \usepackage[T1]{fontenc}
@@ -1089,7 +1091,7 @@ int型の値をパターンマッチしてみると、\prog{@/stdIn:16.1-16.26 W
 
 関数の引数に対して\prog{rev}と同様に引数をcase式でパターンマッチ出来ました
 \footnote{簡単のためにこのような実装になっていますが実はこれは推奨されない実装です。
-なぜならば\prog{@}演算子はリストを全部操作するためコストが大きいからです。\\
+なぜならば\prog{@}演算子はリストを全部走査するためコストが大きいからです。\\
 \prog{fun rev' acc [] = acc | rev' acc (x::xs) = rev' (x::acc) xs; fun rev l = rev' [] l}などと定義するほうが遥かに効率が良いです}。
 ここで、fun文でタプルのパターンマッチをしたことを思い出しましょう。
 これと同様なことがリストに対してもできれば便利そうです。
@@ -1492,7 +1494,7 @@ utop[1]> f (object method name = "joe" method age = 21 end);;
 \end{lstlisting}
 
 この例ではまず\prog{datatype}宣言により新しい型\prog{t}を作っています。
-これの書き方は\\\prog{datatype <PARAM> @@typ@ = @@C1@ of @@typ1@ | @@C2@ of @@typ2@ | ...}」です。
+これの書き方は\\\prog{datatype <PARAM> @@typ@ = @@C1@ of @@typ1@ | @@C2@ of @@typ2@ | ...}です。
 \prog{<PARAM>}の部分はオプションで、\prog{list}のように型の一部をパラメータ化するために用います。
 宣言の際に列挙した、ヴァリアントを作るための関数(上の例ではA,B,Cのこと)をコンストラクタと呼びます。
 またヴァリアントの要素の型がunit型である場合、これの\prog{of}以降を省略できます。
@@ -2386,3 +2388,8 @@ let use_mod m = let module M = (val m : S) in M.to_string M.init;;
 
 
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
