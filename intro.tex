@@ -1,5 +1,5 @@
 % Created 2015-08-27 木 18:07
-\documentclass[11pt,a4paper]{article}
+\documentclass[11pt,a4paper]{jarticle}
 \usepackage[utf8]{inputenc}
 \usepackage[dvipdfmx]{graphicx}
 \usepackage{ascmac} % 枠付き環境のため
@@ -11,7 +11,8 @@
 \usepackage{geometry}
 \geometry{left=25mm,right=25mm,top=20mm,bottom=20mm}
 
-\hypersetup{unicode=true}% しおりの文字化け対策
+\usepackage{atbegshi}
+\AtBeginShipoutFirst{\special{pdf:tounicode EUC-UCS2}}
 
 % \usepackage{courier}
 %\usepackage{DejaVuSansMono}
